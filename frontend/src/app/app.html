@@ -1,0 +1,46 @@
+<div class="app-container">
+  <!-- Sidebar Navigation -->
+  <aside class="sidebar">
+    <a routerLink="/" class="brand">
+      <div class="brand-icon">SL</div>
+      <span>SMARTLEARN</span>
+    </a>
+
+    <ul class="nav-links">
+      <li class="nav-item">
+        <a routerLink="/dashboard" routerLinkActive="active">
+          <span>📊</span> Tableau de bord
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/formations" routerLinkActive="active">
+          <span>📚</span> Catalogue Formations
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/categories" routerLinkActive="active">
+          <span>🏷️</span> Catégories
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/apprenants" routerLinkActive="active">
+          <span>👨‍🎓</span> Apprenants & Profils
+        </a>
+      </li>
+      <li class="nav-item">
+        <a routerLink="/recommandations" routerLinkActive="active">
+          <span>✨</span> Recommandation MLA
+        </a>
+      </li>
+    </ul>
+
+    <div style="margin-top: auto; padding-top: 1.5rem; border-top: 1px solid var(--border-color); font-size: 0.78rem; color: var(--text-dim); text-align: center;">
+      SmartLearn v1.0 • Academic Edition
+    </div>
+  </aside>
+
+  <!-- Main View -->
+  <main class="main-content">
+    <router-outlet></router-outlet>
+  </main>
+</div>
