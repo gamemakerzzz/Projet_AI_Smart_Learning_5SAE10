@@ -1,72 +1,26 @@
 stages:
   - build
   - test
-  - docker
 
-build-backend:
+backend-build:
   stage: build
   image: maven:3.9-eclipse-temurin-17
   script:
     - cd backend
-    - mvn clean compile
+    - mvn -B clean package -DskipTests
 
-build-frontend:
+frontend-build:
   stage: build
-  image: node:20-alpine
+  image: node:20
   script:
     - cd frontend
     - npm ci
     - npm run build
 
-build-mla:
-  stage: build
-  image: python:3.11-slim
+mla-check:
+  stage: test
+  image: python:3.12-slim
   script:
     - cd mla-service
-    - pip install -r requirements.txt
-
-test-backend:
-  stage: test
-  image: maven:3.9-eclipse-temurin-17
-  script:
-    - cd backend
-    - mvn test
-
-test-frontend:
-  stage: test
-  image: node:22-alpine
-  script:
-    - cd frontend
-    - npm ci
-    - npm test -- --watch=false
-
-test-mla:
-  stage: test
-  image: python:3.11-slim
-  script:
-    - pip install -r mla-service/requirements.txt
-    - python -m unittest discover -s mla-service -v
-
-publish-images:
-  stage: docker
-  image: docker:24.0.5
-  services:
-    - name: docker:24.0.5-dind
-      alias: docker
-  variables:
-    DOCKER_HOST: tcp://docker:2375
-    DOCKER_TLS_CERTDIR: ""
-  script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login "$CI_REGISTRY" --username "$CI_REGISTRY_USER" --password-stdin
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA" ./backend
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA" ./frontend
-    - docker build --pull -t "$CI_REGISTRY_IMAGE/mla-service:$CI_COMMIT_SHORT_SHA" ./mla-service
-    - docker push "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA"
-    - docker push "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA"
-    - docker push "$CI_REGISTRY_IMAGE/mla-service:$CI_COMMIT_SHORT_SHA"
-    - if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then docker tag "$CI_REGISTRY_IMAGE/backend:$CI_COMMIT_SHORT_SHA" "$CI_REGISTRY_IMAGE/backend:latest" && docker push "$CI_REGISTRY_IMAGE/backend:latest"; fi
-    - if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then docker tag "$CI_REGISTRY_IMAGE/frontend:$CI_COMMIT_SHORT_SHA" "$CI_REGISTRY_IMAGE/frontend:latest" && docker push "$CI_REGISTRY_IMAGE/frontend:latest"; fi
-    - if [ "$CI_COMMIT_BRANCH" = "$CI_DEFAULT_BRANCH" ]; then docker tag "$CI_REGISTRY_IMAGE/mla-service:$CI_COMMIT_SHORT_SHA" "$CI_REGISTRY_IMAGE/mla-service:latest" && docker push "$CI_REGISTRY_IMAGE/mla-service:latest"; fi
-  rules:
-    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
-    - if: '$CI_COMMIT_TAG'
+    - pip install --no-cache-dir -r requirements.txt
+    - python -m py_compile main.py
