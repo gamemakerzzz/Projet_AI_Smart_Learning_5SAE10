@@ -1,5 +1,7 @@
 # 🎓 SMARTLEARN — Plateforme Intelligente de Gestion et Recommandation de Formations
 
+Le module **Flashcards documents** est accessible après connexion SmartLearn sur `http://localhost:4200/#/login`, depuis le tableau de bord ou l’espace apprenant. L’accès direct à `/#/flashcards` et aux API nécessite une session authentifiée. Il génère des cartes et des explications avec Luna à partir de fichiers PDF, PowerPoint (.pptx) et Word (.docx). Connexion OpenAI, limites et fonctionnement : [guide Flashcards](docs/flashcards.md).
+
 SMARTLEARN est une application web Full Stack dotée d'un moteur de Recommandation basé sur l'Intelligence Artificielle (Machine Learning), développée dans le cadre d'un projet universitaire.
 
 ---

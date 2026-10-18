@@ -25,14 +25,14 @@ describe('Role navigation', () => {
     const fixture = TestBed.createComponent(AppComponent);
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('.brand').textContent).toContain('SmartLearn');
-    expect(fixture.nativeElement.querySelectorAll('.nav-links a').length).toBe(5);
+    expect(fixture.nativeElement.querySelectorAll('.nav-links a').length).toBe(6);
     expect(fixture.nativeElement.textContent).toContain('Administration');
   });
   it('shows only personal links for users', async () => {
     user.set({ id: 2, email: 'user@example.com', nom: 'User', prenom: 'Test', role: 'USER' });
     const fixture = TestBed.createComponent(AppComponent);
     await fixture.whenStable();
-    expect(fixture.nativeElement.querySelectorAll('.nav-links a').length).toBe(4);
+    expect(fixture.nativeElement.querySelectorAll('.nav-links a').length).toBe(5);
     expect(fixture.nativeElement.textContent).toContain('Mon profil');
     expect(fixture.nativeElement.querySelector('a[href="/apprenants"]')).toBeNull();
   });

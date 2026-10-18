@@ -31,6 +31,8 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/csrf", "/api/auth/login", "/error").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/flashcards/openai/callback").permitAll()
+                .requestMatchers("/api/flashcards/**").authenticated()
                 .requestMatchers("/api/auth/me", "/api/auth/logout").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/formations/**", "/api/categories/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/apprenants").hasRole("ADMIN")

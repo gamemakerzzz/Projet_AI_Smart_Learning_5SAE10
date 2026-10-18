@@ -1,4 +1,4 @@
-<div class="page-header"><div><p class="eyebrow">VOTRE PARCOURS, VOS AMBITIONS</p><h1 class="page-title">Bonjour {{ auth.user()?.prenom }}.</h1><p class="page-subtitle">Une nouvelle compétence peut tout changer. Quel sera votre prochain objectif ?</p></div></div>
+<div class="page-header"><div><p class="eyebrow">VOTRE PARCOURS, VOS AMBITIONS</p><h1 class="page-title">Bonjour {{ auth.user()?.prenom }}.</h1><p class="page-subtitle">Une nouvelle compétence peut tout changer. Quel sera votre prochain objectif ?</p></div><a routerLink="/flashcards" class="btn btn-primary"><app-icon name="spark" /> Ouvrir les flashcards</a></div>
 @if (loading) { <div class="loading-state" role="status">Chargement de votre espace personnel…</div> }
 @else if (error) { <div class="error-state" role="alert"><span>Votre espace n'a pas pu être chargé.</span><button class="btn btn-secondary" (click)="load()">Réessayer</button></div> }
 @else {

@@ -1,0 +1,118 @@
+.video-lesson {
+  margin: 28px 0;
+  padding: 26px;
+  background: #f0f6f3;
+  border: 1px solid #d5e4db;
+  border-radius: 18px;
+  color: #203b32;
+}
+.eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #39715d;
+}
+h2 {
+  font-size: 24px;
+  line-height: 1.25;
+  margin: 10px 0;
+}
+h3 {
+  font-size: 18px;
+}
+p {
+  line-height: 1.6;
+  font-size: 14px;
+}
+video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 12px;
+  background: #142134;
+  margin-top: 18px;
+}
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 16px 0;
+  font-size: 13px;
+}
+a {
+  color: #245e49;
+  font-weight: 700;
+}
+button {
+  border: 0;
+  border-radius: 10px;
+  background: #285e49;
+  color: white;
+  padding: 13px 20px;
+  font: inherit;
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.secondary {
+  background: transparent;
+  color: #285e49;
+  text-decoration: underline;
+}
+.small {
+  font-size: 12px;
+  color: #567064;
+}
+.disclosure {
+  margin-bottom: 0;
+}
+.error {
+  color: #982f37;
+}
+.progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 0;
+  font-size: 14px;
+}
+.pulse {
+  width: 12px;
+  height: 12px;
+  border: 2px solid #b4d2c3;
+  border-top-color: #285e49;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse {
+    animation: none;
+  }
+}
+details {
+  margin-top: 20px;
+  font-size: 13px;
+}
+summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+article {
+  border-top: 1px solid #d5e4db;
+  margin-top: 18px;
+  padding-top: 4px;
+}
+blockquote {
+  margin: 10px 0;
+  padding-left: 14px;
+  border-left: 3px solid #9bbdad;
+  line-height: 1.5;
+}
