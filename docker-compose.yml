@@ -1,0 +1,77 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: smartlearn-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-smartlearn}
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -uroot -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  mla-service:
+    build:
+      context: ./mla-service
+    container_name: smartlearn-mla
+    restart: always
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: smartlearn-backend
+    restart: always
+    ports:
+      - "8082:8081"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql-db:3306/smartlearn?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
+      MLA_SERVICE_URL: http://mla-service:8000
+      SMARTLEARN_ADMIN_EMAIL: ${SMARTLEARN_ADMIN_EMAIL:-admin@smartlearn.local}
+      SMARTLEARN_ADMIN_PASSWORD: ${SMARTLEARN_ADMIN_PASSWORD:-}
+    depends_on:
+      mysql-db:
+        condition: service_healthy
+      mla-service:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: smartlearn-frontend
+    restart: always
+
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+  sonarqube:
+  image: sonarqube:community
+  container_name: smartlearn-sonarqube
+  ports:
+    - "9000:9000"
+  environment:
+    SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+  volumes:
+    - sonarqube_data:/opt/sonarqube/data
+    - sonarqube_extensions:/opt/sonarqube/extensions
+    - sonarqube_logs:/opt/sonarqube/logs
+volumes:
+  mysql_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:

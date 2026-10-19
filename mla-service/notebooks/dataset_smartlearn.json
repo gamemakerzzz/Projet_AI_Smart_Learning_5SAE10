@@ -1,0 +1,170 @@
+{
+  "description": "Dataset pédagogique synthétique, sans données personnelles ni labels de pertinence réels.",
+  "formations": [
+    {
+      "id": 1,
+      "titre": "Java pour débutants",
+      "description": "Introduction à Java et à la programmation orientée objet.",
+      "niveau": "Débutant",
+      "motsCles": "java programmation classes objets",
+      "categorie": "Développement Web"
+    },
+    {
+      "id": 2,
+      "titre": "Spring Boot Avancé",
+      "description": "Développement API REST avec Java Spring Boot et SQL pour le backend.",
+      "niveau": "Avancé",
+      "motsCles": "java spring boot backend api rest sql",
+      "categorie": "Développement Web"
+    },
+    {
+      "id": 3,
+      "titre": "Angular Fundamentals",
+      "description": "Créer des interfaces web avec Angular et TypeScript.",
+      "niveau": "Intermédiaire",
+      "motsCles": "angular typescript frontend composants",
+      "categorie": "Développement Web"
+    },
+    {
+      "id": 4,
+      "titre": "Python pour débutants",
+      "description": "Apprendre les bases de Python et écrire des scripts.",
+      "niveau": "Débutant",
+      "motsCles": "python variables boucles fonctions",
+      "categorie": "Programmation"
+    },
+    {
+      "id": 5,
+      "titre": "Analyse de données avec Python",
+      "description": "Analyser des données avec pandas et réaliser des visualisations.",
+      "niveau": "Intermédiaire",
+      "motsCles": "python pandas analyse données statistiques",
+      "categorie": "Data Science"
+    },
+    {
+      "id": 6,
+      "titre": "Machine Learning avec scikit-learn",
+      "description": "Construire et évaluer des modèles de classification et régression.",
+      "niveau": "Intermédiaire",
+      "motsCles": "python machine learning scikit learn modèles données",
+      "categorie": "Data Science"
+    },
+    {
+      "id": 7,
+      "titre": "SQL et bases de données",
+      "description": "Écrire des requêtes SQL et concevoir des bases de données relationnelles.",
+      "niveau": "Débutant",
+      "motsCles": "sql mysql requêtes jointures bases données",
+      "categorie": "Bases de données"
+    },
+    {
+      "id": 8,
+      "titre": "Docker et CI/CD",
+      "description": "Déployer des applications avec Docker et automatiser les pipelines CI/CD.",
+      "niveau": "Intermédiaire",
+      "motsCles": "docker devops déploiement pipeline ci cd",
+      "categorie": "Cloud / DevOps"
+    },
+    {
+      "id": 9,
+      "titre": "Kubernetes en pratique",
+      "description": "Orchestrer des conteneurs et gérer des déploiements dans le cloud.",
+      "niveau": "Avancé",
+      "motsCles": "kubernetes docker cloud devops orchestration",
+      "categorie": "Cloud / DevOps"
+    },
+    {
+      "id": 10,
+      "titre": "Sécurité des applications web",
+      "description": "Sécuriser les API et comprendre les vulnérabilités web.",
+      "niveau": "Intermédiaire",
+      "motsCles": "sécurité web api authentification vulnérabilités",
+      "categorie": "Cybersécurité"
+    },
+    {
+      "id": 11,
+      "titre": "Management équipe",
+      "description": "Développer le leadership et la communication pour gérer une équipe.",
+      "niveau": "Débutant",
+      "motsCles": "management leadership communication équipe",
+      "categorie": "Management"
+    },
+    {
+      "id": 12,
+      "titre": "Gestion de projet agile",
+      "description": "Organiser les projets avec Scrum et les méthodes agiles.",
+      "niveau": "Intermédiaire",
+      "motsCles": "gestion projet agile scrum équipe",
+      "categorie": "Management"
+    },
+    {
+      "id": 13,
+      "titre": "Design UX/UI",
+      "description": "Concevoir des interfaces et améliorer expérience utilisateur.",
+      "niveau": "Débutant",
+      "motsCles": "design ux ui interfaces utilisateur figma",
+      "categorie": "Design"
+    },
+    {
+      "id": 14,
+      "titre": "React et JavaScript",
+      "description": "Développer des interfaces frontend avec React et JavaScript.",
+      "niveau": "Intermédiaire",
+      "motsCles": "react javascript frontend web composants",
+      "categorie": "Développement Web"
+    },
+    {
+      "id": 15,
+      "titre": "Tests Java avec JUnit",
+      "description": "Tester les applications Java et Spring Boot avec JUnit et Mockito.",
+      "niveau": "Intermédiaire",
+      "motsCles": "java spring boot junit mockito tests backend",
+      "categorie": "Développement Web"
+    }
+  ],
+  "profils": [
+    {
+      "nom": "Profil backend fictif",
+      "niveau": "Intermédiaire",
+      "objectif": "Développeur Backend",
+      "domaineInteret": "Développement Web",
+      "competences": [
+        "Java",
+        "Spring",
+        "SQL"
+      ]
+    },
+    {
+      "nom": "Profil data fictif",
+      "niveau": "Intermédiaire",
+      "objectif": "Analyse de données avec Python",
+      "domaineInteret": "Data Science",
+      "competences": [
+        "Python",
+        "Pandas",
+        "Statistiques"
+      ]
+    },
+    {
+      "nom": "Profil DevOps fictif",
+      "niveau": "Intermédiaire",
+      "objectif": "Déploiement cloud et DevOps",
+      "domaineInteret": "Cloud / DevOps",
+      "competences": [
+        "Docker",
+        "Kubernetes",
+        "CI/CD"
+      ]
+    },
+    {
+      "nom": "Profil management fictif",
+      "niveau": "Débutant",
+      "objectif": "Management équipe et leadership",
+      "domaineInteret": "Management",
+      "competences": [
+        "Communication",
+        "Gestion projet"
+      ]
+    }
+  ]
+}

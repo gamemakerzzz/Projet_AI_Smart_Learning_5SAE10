@@ -1,0 +1,19 @@
+<div class="page-header"><div><p class="eyebrow">VOTRE PARCOURS, VOS AMBITIONS</p><h1 class="page-title">Bonjour {{ auth.user()?.prenom }}.</h1><p class="page-subtitle">Une nouvelle compétence peut tout changer. Quel sera votre prochain objectif ?</p></div></div>
+@if (loading) { <div class="loading-state" role="status">Chargement de votre espace personnel…</div> }
+@else if (error) { <div class="error-state" role="alert"><span>Votre espace n'a pas pu être chargé.</span><button class="btn btn-secondary" (click)="load()">Réessayer</button></div> }
+@else {
+  <div class="home-top">
+    <section class="learner-hero"><span class="eyebrow">APPRENDRE AVEC UN OBJECTIF</span><h2>Votre prochaine étape<br>commence ici.</h2><p>{{ learner?.profil?.objectif || 'Définissez votre objectif et découvrez les formations qui vous correspondent.' }}</p><a routerLink="/recommandations" class="btn btn-primary">Explorer mes recommandations <app-icon name="arrow" /></a><div class="hero-foot"><app-icon name="spark" /><span>Des suggestions basées sur votre profil et vos compétences.</span></div></section>
+    <section class="card profile-card"><div class="section-heading"><h2>Mon profil</h2><span class="badge badge-primary">{{ completeness }} %</span></div><div class="completion-track" role="progressbar" aria-label="Complétude du profil" [attr.aria-valuenow]="completeness" aria-valuemin="0" aria-valuemax="100"><span [style.width.%]="completeness"></span></div>
+      <ul class="profile-checklist">@for (step of steps; track step.title) { <li [class.done]="step.done"><span class="step-dot"><app-icon [name]="step.done ? 'check' : 'plus'" /></span>{{ step.title }}</li> }</ul>
+      <a [routerLink]="['/apprenants', auth.user()!.id, 'profil']" class="text-link">{{ completeness === 100 ? 'Mettre à jour mon profil' : 'Compléter mon profil' }} <app-icon name="arrow" /></a>
+    </section>
+  </div>
+  <div class="learner-facts"><div><app-icon name="book" /><strong>{{ formations.length }}</strong><span>formations à explorer</span></div><div><app-icon name="spark" /><strong>{{ skills.length }}</strong><span>compétences renseignées</span></div><div><app-icon name="user" /><strong>{{ learner?.profil?.niveau || 'À définir' }}</strong><span>votre niveau actuel</span></div></div>
+  <section><div class="section-heading"><div><h2>À découvrir dans le catalogue</h2><p>Les derniers ajouts, pour nourrir votre curiosité.</p></div><a routerLink="/formations" class="text-link">Tout explorer <app-icon name="arrow" /></a></div>
+    <div class="course-grid">@for (course of formations.slice(0,3); track course.id; let i = $index) {
+      <article class="course-card"><div class="course-cover" [class.tone-1]="i % 3 === 1" [class.tone-2]="i % 3 === 2"><span>{{ course.categorie?.nom }}</span><app-icon name="book" /></div><div class="course-body"><div><span class="badge badge-secondary">{{ course.niveau }}</span></div><h3>{{ course.titre }}</h3><p>{{ course.description || 'Découvrez le contenu de cette formation.' }}</p><div class="course-bottom"><strong>{{ course.prix === 0 ? 'Gratuit' : (course.prix | currency:'EUR') }}</strong><a [routerLink]="['/formations', course.id]" class="text-link">Découvrir <app-icon name="arrow" /></a></div></div></article>
+    }</div>
+    @if (!formations.length) { <div class="empty-state"><h3>Le catalogue se prépare</h3><p>Les formations publiées par votre administrateur apparaîtront ici.</p></div> }
+  </section>
+}

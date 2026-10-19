@@ -1,0 +1,30 @@
+<div class="page-header">
+  <div><p class="eyebrow">PILOTAGE DE LA PLATEFORME</p><h1 class="page-title">Vue d'ensemble</h1><p class="page-subtitle">Bonjour {{ auth.user()?.prenom }}, voici l'essentiel de votre espace de formation.</p></div>
+  <a routerLink="/formations" class="btn btn-primary"><app-icon name="book" /> Gérer le catalogue</a>
+</div>
+@if (loading) { <div class="loading-state" role="status">Préparation de votre tableau de bord…</div> }
+@else if (error) { <div class="error-state" role="alert"><span>Le tableau de bord n'a pas pu être chargé.</span><button class="btn btn-secondary" (click)="loadData()">Réessayer</button></div> }
+@else {
+  <div class="metrics">
+    <div class="metric"><div class="metric-top"><span>Formations</span><app-icon name="book" /></div><strong>{{ summary.formations }}</strong><small>Disponibles au catalogue</small></div>
+    <div class="metric"><div class="metric-top"><span>Apprenants</span><app-icon name="users" /></div><strong>{{ summary.apprenants }}</strong><small>Comptes utilisateurs</small></div>
+    <div class="metric"><div class="metric-top"><span>Catégories</span><app-icon name="tag" /></div><strong>{{ summary.categories }}</strong><small>Domaines de formation</small></div>
+    <div class="metric"><div class="metric-top"><span>Compétences</span><app-icon name="spark" /></div><strong>{{ summary.competences }}</strong><small>Renseignées par les apprenants</small></div>
+  </div>
+  <section class="admin-banner">
+    <div><span class="banner-label">FAIRE GRANDIR LES COMPÉTENCES</span><h2>Un catalogue utile.<br>Des parcours plus pertinents.</h2><p>Organisez vos contenus et accompagnez chaque apprenant dans ses objectifs.</p><a routerLink="/apprenants" class="banner-link">Accompagner les apprenants <app-icon name="arrow" /></a></div>
+    <div class="profile-snapshot"><span>Profils créés</span><strong>{{ summary.profils }} <small>/ {{ summary.apprenants }}</small></strong><div class="profile-track"><span [style.width.%]="coverage"></span></div><p>{{ summary.apprenants - summary.profils }} profil(s) à compléter</p></div>
+  </section>
+  <div class="dashboard-columns">
+    <section class="card latest-card"><div class="section-heading"><div><h2>Derniers ajouts</h2><p>Les nouvelles formations de votre catalogue.</p></div><a routerLink="/formations" class="text-link">Tout voir <app-icon name="arrow" /></a></div>
+      @for (course of formations.slice(0,4); track course.id) {
+        <a class="course-row" [routerLink]="['/formations', course.id]"><span class="course-row-icon"><app-icon name="book" /></span><div><strong>{{ course.titre }}</strong><small>{{ course.categorie?.nom }} · {{ course.niveau }}</small></div><span class="row-price">{{ course.prix === 0 ? 'Gratuit' : (course.prix | currency:'EUR') }}</span><app-icon name="arrow" /></a>
+      } @empty { <div class="empty-state"><h3>Votre catalogue commence ici</h3><p>Ajoutez votre première formation.</p><a routerLink="/formations" class="btn btn-primary">Ouvrir le catalogue</a></div> }
+    </section>
+    <section class="card"><div class="section-heading"><div><h2>Répartition du catalogue</h2><p>Nombre de formations par domaine.</p></div></div>
+      @for (item of distribution; track item.name) { <div class="distribution"><div><span>{{ item.name }}</span><strong>{{ item.count }}</strong></div><div class="distribution-track"><span [style.width.%]="item.width"></span></div></div> }
+      @if (!distribution.length) { <p class="muted">Les catégories apparaîtront après l'ajout de formations.</p> }
+      <a routerLink="/categories" class="text-link category-link">Organiser les catégories <app-icon name="arrow" /></a>
+    </section>
+  </div>
+}
