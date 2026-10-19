@@ -30,6 +30,9 @@ public interface ExamenRepository extends JpaRepository<Examen, Long> {
             java.time.LocalDateTime fin
     );
 
+    // Pour le scheduler : tous les examens dans une période
+    List<Examen> findByDateExamenBetween(java.time.LocalDateTime debut, java.time.LocalDateTime fin);
+
     long countByApprenantId(Long apprenantId);
 
     long countByApprenantIdAndFormationId(

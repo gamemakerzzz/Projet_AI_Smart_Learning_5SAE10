@@ -1,0 +1,117 @@
+<ng-template #sourceLinks let-point>
+  <div class="source-links">@for (source of point.sources; track source.id) { <button type="button" class="source-ref" (click)="focusSource(source.id)">{{ source.label }}</button> }</div>
+</ng-template>
+<div class="page-header">
+  <div><p class="eyebrow">LEARN TOGETHER</p><h1 class="page-title">Community forum<span class="dot">.</span></h1><p class="page-subtitle">Ask a better question. Find a shared answer.</p></div>
+  @if (!composing) { <button class="btn btn-primary" (click)="start()"><app-icon name="plus" /> Ask a question</button> }
+</div>
+@if (error) { <div class="banner error" role="alert">{{ error }} <button class="text-link" (click)="load()">Retry list</button></div> }
+@if (status) { <p class="hint" role="status">AI model: {{ status.model }} · {{ status.configured ? 'Connected' : 'Not connected' }}. @if (!status.configured) { <a routerLink="/flashcards">Connect with ChatGPT</a> to use the AI features, then return here and <button class="text-link" type="button" (click)="refreshStatus()">refresh connection status</button>. }</p> }
+@if (notice) { <div class="banner success" role="status">{{ notice }} <button aria-label="Dismiss notification" (click)="notice = ''">×</button></div> }
+
+@if (composing) {
+  <section class="compose-layout" aria-label="Question editor">
+    <form class="card editor" (ngSubmit)="publish()">
+      <div class="section-heading"><h2>{{ editingId ? 'Edit your question' : 'What are you working on?' }}</h2><span class="badge badge-secondary">{{ editingId ? 'EDIT' : 'NEW DISCUSSION' }}</span></div>
+      <fieldset [disabled]="saving">
+        <label class="form-label" for="question-title">Question title</label>
+        <input id="question-title" class="form-control" name="title" [(ngModel)]="draft.title" (ngModelChange)="draftChanged()" minlength="8" maxlength="180" required placeholder="e.g. How do I prevent anonymous users from opening my dashboard?">
+        <p class="hint">Be specific. At least 8 characters.</p>
+        <label class="form-label" for="question-course">Course</label>
+        <select id="question-course" class="form-control" name="formationId" [(ngModel)]="draft.formationId" (ngModelChange)="draftChanged()"><option [ngValue]="null">General discussion</option>@for (course of courses; track course.id) { <option [ngValue]="course.id">{{ course.titre }}</option> }</select>
+        <label class="form-label spaced" for="question-body">Details &amp; what you have tried</label>
+        <textarea id="question-body" class="form-control" rows="7" name="body" [(ngModel)]="draft.body" (ngModelChange)="draftChanged()" minlength="15" maxlength="6000" required placeholder="Describe the problem, what you expected, and what happened instead. Keep passwords and personal information out of your post."></textarea>
+        <p class="hint">{{ draft.body.length }} / 6,000 characters · Minimum 15</p>
+        <div class="tag-heading"><label class="form-label" for="question-tags">Topic tags</label><button type="button" class="btn btn-secondary btn-sm" [disabled]="!validQuestion || aiBusy || saving" (click)="suggestTags()"><app-icon name="spark" /> {{ tagging ? 'Finding tags…' : 'Auto-tag question' }}</button></div>
+        <input id="question-tags" name="tags" class="form-control" [(ngModel)]="tagsInput" (ngModelChange)="tagsChanged()" maxlength="180" placeholder="angular, authentication, route-guards" aria-describedby="tag-help">
+        <p id="tag-help" class="hint">Up to 6 tags separated by commas. AI fills these in; you can edit them before saving.</p>
+        @if (!validTags) { <p class="tag-error" role="alert">Use at most 6 tags, each up to 28 characters (letters, digits, hyphen, dot, + or #).</p> }
+        @if (tagSuggestion; as suggestion) { <p class="hint tag-explanation">{{ suggestion.result.explanation }} <strong>Publish or save to keep these tags.</strong> {{ suggestion.meta.cached ? 'Cached' : 'AI generated' }} · {{ suggestion.meta.model }}</p> }
+        @if (editingId) { <p class="hint">Editing the question reopens it so the accepted answer can be reviewed.</p> }
+        <div class="actions"><button class="btn btn-primary" type="submit" [disabled]="!validDraft || saving">{{ saving ? 'Saving…' : editingId ? 'Save changes' : 'Publish question' }}</button><button class="btn btn-secondary" type="button" (click)="cancel()">Cancel</button></div>
+      </fieldset>
+    </form>
+    <aside class="ai-panel" aria-label="AI duplicate check">
+      <div class="ai-heading"><span class="ai-icon"><app-icon name="spark" /></span><span class="eyebrow">BEFORE YOU POST</span></div>
+      <h2>Someone may have<br>asked it already.</h2><p>AI compares the meaning of your question with existing discussions, even when the wording is different.</p>
+      <button class="btn btn-primary check-button" type="button" (click)="check()" [disabled]="!validDraft || aiBusy || saving"><app-icon name="spark" /> {{ checking ? 'Comparing questions…' : 'Check similar questions' }}</button>
+      <p class="hint">Checking sends your draft and up to 20 existing questions to the AI provider. It does not publish your draft.</p>
+      @if (checking) { <div class="checking" role="status">Reading the questions and comparing their intent…</div> }
+      @if (aiError) { <p class="banner error" role="alert">{{ aiError }}</p> }
+      @if (status && !status.configured) { <div class="setup-note"><strong>AI connection needed</strong><p>Set the server's OPENAI_API_KEY, or use the project's existing connection on the <a routerLink="/flashcards" target="_blank" rel="noopener">Flashcards page</a>.</p><button class="text-link" type="button" (click)="refreshStatus()">Refresh connection status</button></div> }
+      @if (analysis; as result) {
+        <div class="ai-results" aria-live="polite"><h3>{{ result.matches.length ? 'Worth a look' : 'Ready for a fresh discussion' }}</h3><p>{{ result.summary }}</p>
+          @for (match of result.matches; track match.discussionId) {
+            <article class="match"><div class="match-labels"><span class="badge" [class.badge-primary]="match.relationship === 'DUPLICATE'" [class.badge-secondary]="match.relationship === 'RELATED'">{{ match.relationship === 'DUPLICATE' ? 'Probable duplicate' : 'Related topic' }}</span>@if (match.resolved) { <span class="resolved-label">Answered</span> }</div><a routerLink="/forum" [queryParams]="{ discussion: match.discussionId }" target="_blank" rel="noopener">{{ match.title }} ↗</a><p>{{ match.explanation }}</p></article>
+          }
+          <p class="hint">Checked {{ result.scannedCount }} of {{ result.availableCount }} discussions in scope (most recently updated first). {{ result.aiUsed ? (result.cached ? 'Cached result' : 'AI analysis') : 'No AI call needed' }} · {{ result.durationMs / 1000 | number:'1.1-1' }}s</p>
+          @if (result.aiUsed) { <p class="hint">{{ result.model }} · {{ result.promptVersion }}</p> }
+          <p class="hint">Suggestions can be wrong. Review the discussion and decide whether to publish.</p>
+        </div>
+      }
+    </aside>
+  </section>
+}
+
+@if (detailLoading) { <div class="card" role="status">Loading discussion…</div> }
+@else if (detail; as current) {
+  <a class="text-link back-link" routerLink="/forum">← All discussions</a>
+  <article class="card discussion-detail" id="forum-question" tabindex="-1"><div class="topic-meta"><span class="badge" [class.badge-primary]="current.discussion.acceptedReplyId" [class.badge-secondary]="!current.discussion.acceptedReplyId">{{ current.discussion.acceptedReplyId ? 'Resolved' : 'Open question' }}</span><span>{{ current.discussion.formationTitle || 'General discussion' }}</span></div><h2>{{ current.discussion.title }}</h2><p class="byline">{{ current.discussion.authorName }} · {{ current.discussion.createdAt | date:'mediumDate' }}</p><p class="post-body">{{ current.discussion.body }}</p>
+    <div class="topic-tags">@for (tag of current.discussion.tags || []; track tag) { <span class="topic-tag">#{{ tag }}</span> }</div>
+    @if (canManage(current.discussion.authorId)) { <div class="actions"><button class="btn btn-secondary btn-sm" [disabled]="saving" (click)="start(current.discussion)">Edit question</button><button class="btn btn-danger btn-sm" [disabled]="saving" (click)="removeTopic()">Delete</button>@if (current.discussion.acceptedReplyId) { <button class="btn btn-secondary btn-sm" [disabled]="saving" (click)="accept(null)">Reopen discussion</button> }</div> }
+  </article>
+  <section class="insights-header"><div><p class="eyebrow">MAKE SENSE OF THE CONVERSATION</p><h2>Discussion insights</h2><p>Summarize what was said or find relevant learning material.</p></div><button class="btn btn-secondary btn-sm" [disabled]="saving || aiBusy" (click)="open(current.discussion.id)">Refresh discussion</button></section>
+  @if (status && !status.configured) { <div class="setup-note insight-setup"><strong>Use your existing AI connection</strong><p>Connect through the <a routerLink="/flashcards" target="_blank" rel="noopener">Flashcards page</a>, then return here. A server API key also works.</p><button class="text-link" (click)="refreshStatus()">Refresh connection status</button></div> }
+  @if (insightError) { <div class="banner error" role="alert">{{ insightError }}</div> }
+  <div class="insights-grid">
+    <section class="card insight-card" aria-label="AI discussion summary">
+      <div class="insight-heading"><div><app-icon name="spark" /><h3>Discussion summary</h3></div><button class="btn btn-secondary btn-sm" [disabled]="aiBusy || saving" (click)="summarize()">{{ summarizing ? 'Summarizing…' : summaryResult ? 'Summarize again' : 'Summarize discussion' }}</button></div>
+      <p class="hint">A concise account of the conversation, with references to the original posts.</p>
+      @if (summarizing) { <p class="checking" role="status">Reading the question and replies…</p> }
+      @if (summaryResult; as response) {
+        <div aria-live="polite"><p class="insight-text">{{ response.result.overview.text }}</p><ng-container [ngTemplateOutlet]="sourceLinks" [ngTemplateOutletContext]="{ $implicit: response.result.overview }" />
+          @for (section of summarySections; track section.title) { @if (section.items.length) { <h4>{{ section.title }}</h4><ul class="evidence-list">@for (point of section.items; track $index) { <li><p>{{ point.text }}</p><ng-container [ngTemplateOutlet]="sourceLinks" [ngTemplateOutletContext]="{ $implicit: point }" /></li> }</ul> } }
+          @if (response.result.acceptedReplyId) { <div class="accepted-insight"><strong>Accepted answer</strong><p>{{ response.result.acceptedAnswerSummary }}</p><button class="source-ref" (click)="focusSource('reply-' + response.result.acceptedReplyId)">View accepted reply</button></div> }
+          @else { <p class="hint">No answer has been accepted. AI does not resolve the discussion.</p> }
+          <p class="hint coverage">Included {{ response.result.includedReplies }} of {{ response.result.totalReplies }} replies. @if (response.result.truncated) { Some replies or long text were omitted. }</p>
+          <p class="hint">{{ response.meta.cached ? 'Cached result' : 'AI generated' }} · {{ response.meta.durationMs / 1000 | number:'1.1-1' }}s · {{ response.meta.model }} · {{ response.meta.promptVersion }}</p>
+          <p class="hint">Check the cited posts. A summary can misinterpret a reply.</p>
+        </div>
+      } @else if (!summarizing) { <p class="insight-empty">See the key points, proposed solutions and open questions without rereading every reply.</p> }
+    </section>
+    <section class="card insight-card" aria-label="AI course and resource suggestions">
+      <div class="insight-heading"><div><app-icon name="book" /><h3>Keep learning</h3></div><button class="btn btn-secondary btn-sm" [disabled]="aiBusy || saving" (click)="suggestLearning()">{{ suggestingLearning ? 'Finding links…' : learningResult ? 'Suggest again' : 'Suggest courses & resources' }}</button></div>
+      <p class="hint">Suggestions based on this discussion, with links to saved courses and reviewed documentation.</p>
+      @if (suggestingLearning) { <p class="checking" role="status">Comparing the discussion with learning material…</p> }
+      @if (learningResult; as response) {
+        <div aria-live="polite"><h4>On SmartLearn</h4>
+          @for (link of response.result.courses; track link.id) { <article class="learning-link"><a [routerLink]="link.url" target="_blank" rel="noopener">{{ link.title }} ↗</a><p>{{ link.explanation }}</p></article> }
+          @if (!response.result.courses.length) { <p class="insight-empty">No strong match was found among the platform courses checked.</p> }
+          <h4>External resources</h4>
+          @for (link of response.result.resources; track link.id) { <article class="learning-link"><a [href]="link.url" target="_blank" rel="noopener noreferrer">{{ link.title }} ↗</a><p>{{ link.explanation }}</p><small>{{ link.url }}</small></article> }
+          @if (!response.result.resources.length) { <p class="insight-empty">No suitable external resource was found in the reviewed catalogue.</p> }
+          <p class="hint coverage">Compared {{ response.result.coursesConsidered }} courses and {{ response.result.resourcesConsidered }} resources. Included {{ response.result.includedReplies }} of {{ response.result.totalReplies }} replies. @if (response.result.truncated) { Discussion text was limited. }</p>
+          <p class="hint">{{ response.result.scope }}</p>
+          <p class="hint">{{ response.meta.cached ? 'Cached result' : 'AI selected' }} · {{ response.meta.durationMs / 1000 | number:'1.1-1' }}s · {{ response.meta.model }} · {{ response.meta.promptVersion }}</p>
+          <p class="hint">Relevance is an AI suggestion. External pages can change.</p>
+        </div>
+      } @else if (!suggestingLearning) { <p class="insight-empty">Find a useful course or documentation page for the topic being discussed.</p> }
+    </section>
+  </div>
+
+  <h2 class="replies-title">{{ current.replies.length }} {{ current.replies.length === 1 ? 'reply' : 'replies' }}</h2>
+  @for (reply of current.replies; track reply.id) {
+    <article class="card reply" [id]="'reply-' + reply.id" tabindex="-1" [class.accepted]="reply.id === current.discussion.acceptedReplyId"><div class="topic-meta"><strong>{{ reply.authorName }}</strong><span>{{ reply.createdAt | date:'mediumDate' }}</span>@if (reply.id === current.discussion.acceptedReplyId) { <span class="badge badge-primary">✓ Accepted answer</span> }</div>
+      @if (editingReplyId === reply.id) { <label class="form-label" [for]="'reply-edit-' + reply.id">Edit reply</label><textarea class="form-control" [id]="'reply-edit-' + reply.id" [(ngModel)]="editingReplyBody" rows="4" maxlength="6000" [disabled]="saving"></textarea><div class="actions"><button class="btn btn-primary btn-sm" (click)="saveReply(reply)" [disabled]="saving || editingReplyBody.trim().length < 2">Save reply</button><button class="btn btn-secondary btn-sm" (click)="editingReplyId = null" [disabled]="saving">Cancel</button></div> }
+      @else { <p class="post-body">{{ reply.body }}</p><div class="actions">@if (canManage(current.discussion.authorId) && reply.id !== current.discussion.acceptedReplyId) { <button class="btn btn-secondary btn-sm" [disabled]="saving" (click)="accept(reply.id)">Accept answer</button> }@if (canManage(reply.authorId)) { <button class="btn btn-secondary btn-sm" [disabled]="saving" (click)="editReply(reply)">Edit</button><button class="btn btn-danger btn-sm" [disabled]="saving" (click)="removeReply(reply)">Delete reply</button> }</div> }
+    </article>
+  }
+  <form class="card" (ngSubmit)="addReply()"><label class="form-label" for="new-reply">Share what worked for you</label><textarea id="new-reply" class="form-control" name="replyBody" [(ngModel)]="replyBody" rows="4" maxlength="6000" required minlength="2" [disabled]="saving" placeholder="Write a helpful reply…"></textarea><div class="actions"><button class="btn btn-primary" [disabled]="saving || replyBody.trim().length < 2">Post reply</button></div></form>
+} @else {
+  <section class="forum-intro"><div><span class="intro-icon"><app-icon name="users" /></span><h2>A little help goes a long way.</h2><p>Share a blocker, compare approaches, or pass on something you learned.</p></div><span class="community-pill"><span></span> {{ topics.total }} discussions</span></section>
+  <form class="filters" (ngSubmit)="load()"><div class="search-field"><label for="forum-search">Search discussions</label><input id="forum-search" class="form-control" name="search" [(ngModel)]="search" maxlength="180" placeholder="Search by title, details or tag…"></div><div><label for="forum-course">Course</label><select id="forum-course" class="form-control" name="course" [(ngModel)]="course" (ngModelChange)="load()"><option [ngValue]="null">All courses</option>@for (course of courses; track course.id) { <option [ngValue]="course.id">{{ course.titre }}</option> }</select></div><div><label for="forum-state">Status</label><select id="forum-state" class="form-control" name="state" [(ngModel)]="state" (ngModelChange)="load()"><option value="all">All discussions</option><option value="open">Open questions</option><option value="resolved">Resolved</option></select></div><button class="btn btn-secondary" type="submit">Search</button></form>
+  @if (loading) { <div class="card" role="status">Loading discussions…</div> }
+  @else if (!topics.items.length) { <div class="card empty"><app-icon name="users" /><h2>{{ topics.total ? 'No discussions on this page' : 'Start the conversation' }}</h2><p>No discussions match these filters. Try a different search or ask a question.</p><button class="btn btn-primary" (click)="start()">Ask a question</button></div> }
+  @else { <div class="topic-list">@for (topic of topics.items; track topic.id) { <article class="topic-row"><div class="topic-avatar">{{ topic.authorName.charAt(0) }}</div><div class="topic-main"><div class="topic-meta"><span>{{ topic.formationTitle || 'General discussion' }}</span><span class="badge" [class.badge-primary]="topic.acceptedReplyId" [class.badge-secondary]="!topic.acceptedReplyId">{{ topic.acceptedReplyId ? 'Resolved' : 'Open' }}</span></div><a class="topic-title" routerLink="/forum" [queryParams]="{ discussion: topic.id }">{{ topic.title }}</a><p class="excerpt">{{ topic.body }}</p><div class="topic-tags">@for (tag of topic.tags || []; track tag) { <span class="topic-tag">#{{ tag }}</span> }</div><p class="byline">{{ topic.authorName }} · {{ topic.updatedAt | date:'mediumDate' }}</p></div><div class="reply-count"><strong>{{ topic.replyCount }}</strong><span>{{ topic.replyCount === 1 ? 'reply' : 'replies' }}</span></div></article> }</div> }
+  @if (topics.totalPages > 1) { <nav class="pagination" aria-label="Discussion pages"><button class="btn btn-secondary" [disabled]="topics.page === 0 || loading" (click)="load(topics.page - 1)">Previous</button><span>Page {{ topics.page + 1 }} of {{ topics.totalPages }}</span><button class="btn btn-secondary" [disabled]="topics.page + 1 >= topics.totalPages || loading" (click)="load(topics.page + 1)">Next</button></nav> }
+}

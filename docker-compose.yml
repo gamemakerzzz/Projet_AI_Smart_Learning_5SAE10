@@ -29,6 +29,13 @@ services:
       timeout: 5s
       retries: 5
 
+  ia-service:
+    build:
+      context: ./ia-service
+    restart: always
+    ports:
+      - "8001:8001"
+
   backend:
     build:
       context: ./backend
@@ -41,6 +48,10 @@ services:
       SPRING_DATASOURCE_USERNAME: root
       SPRING_DATASOURCE_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       MLA_SERVICE_URL: http://mla-service:8000
+      IA_SERVICE_URL: http://ia-service:8001
+      TUTOR_AI_KEY: ${TUTOR_AI_KEY:-${GROQ_API_KEY:-}}
+      TUTOR_AI_MODEL: ${TUTOR_AI_MODEL:-qwen/qwen3.8-27b}
+      TUTOR_AI_URL: ${TUTOR_AI_URL:-https://api.groq.com/openai/v1/chat/completions}
       SMARTLEARN_ADMIN_EMAIL: ${SMARTLEARN_ADMIN_EMAIL:-admin@smartlearn.local}
       SMARTLEARN_ADMIN_PASSWORD: ${SMARTLEARN_ADMIN_PASSWORD:-}
     depends_on:
@@ -60,16 +71,17 @@ services:
     depends_on:
       - backend
   sonarqube:
-  image: sonarqube:community
-  container_name: smartlearn-sonarqube
-  ports:
-    - "9000:9000"
-  environment:
-    SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
-  volumes:
-    - sonarqube_data:/opt/sonarqube/data
-    - sonarqube_extensions:/opt/sonarqube/extensions
-    - sonarqube_logs:/opt/sonarqube/logs
+    image: sonarqube:community
+    container_name: smartlearn-sonarqube
+    profiles: ["quality"]
+    ports:
+      - "9000:9000"
+    environment:
+      SONAR_ES_BOOTSTRAP_CHECKS_DISABLE: "true"
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
 volumes:
   mysql_data:
   sonarqube_data:

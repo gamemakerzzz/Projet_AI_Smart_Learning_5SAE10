@@ -10,6 +10,7 @@ public class ExamenResponse {
     private LocalDateTime dateExamen;
     private Integer dureeMinutes;
     private Long formationId;
+    private Long apprenantId;
     private Integer coefficient;
 
     public Long getId() {
@@ -58,6 +59,14 @@ public class ExamenResponse {
 
     public void setFormationId(Long formationId) {
         this.formationId = formationId;
+    }
+
+    public Long getApprenantId() {
+        return apprenantId;
+    }
+
+    public void setApprenantId(Long apprenantId) {
+        this.apprenantId = apprenantId;
     }
 
     public Integer getCoefficient() {

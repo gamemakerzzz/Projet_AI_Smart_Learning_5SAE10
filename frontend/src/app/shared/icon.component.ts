@@ -13,6 +13,7 @@ export class IconComponent {
     user: 'M20 21v-2a6 6 0 0 0-6-6h-4a6 6 0 0 0-6 6v2M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8',
     tag: 'M20 13 11 22 2 13V3h10l8 8a2 2 0 0 1 0 2ZM7 7h.01',
     spark: 'm12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5ZM20 2v4M18 4h4',
+    chart: 'M3 3v18h18M7 17v-4M12 17V8M17 17V5',
     arrow: 'M4 12h16m-6-6 6 6-6 6',
     logout: 'M9 4H4v16h5M10 12h11m-4-4 4 4-4 4',
     menu: 'M4 6h16M4 12h16M4 18h16',

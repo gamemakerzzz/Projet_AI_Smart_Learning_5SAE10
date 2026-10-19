@@ -1,0 +1,383 @@
+<div class="flashcards-page">
+  <section class="intro-block">
+    <span class="eyebrow">VOTRE DOCUMENT, VOTRE PROCHAINE RÉVISION</span>
+    <h1>Moins de pages à relire.<br /><em>Plus de choses à retenir.</em></h1>
+    <p>
+      Transformez votre document en flashcards avec l’IA. Révisez chaque notion et regardez une
+      leçon vidéo expliquée à voix haute.
+    </p>
+    <div class="benefits">
+      <span><app-icon name="check" /> Depuis votre tableau de bord</span
+      ><span><app-icon name="check" /> Sources dans votre document</span
+      ><span><app-icon name="spark" /> Explications à la demande</span>
+    </div>
+  </section>
+
+  @if (error) {
+    <div class="notice error" role="alert">{{ error }}</div>
+  }
+  @if (checking) {
+    <p class="notice" role="status">Connexion au service…</p>
+  }
+  @if (!checking) {
+    <section class="openai-connection" aria-label="Connexion OpenAI">
+      <div>
+        <strong>{{
+          connected ? 'Votre compte OpenAI est connecté' : 'Connecter mon compte OpenAI'
+        }}</strong>
+        <p>
+          {{
+            connected
+              ? 'Votre connexion est privée à cette session. Les générations utilisent votre forfait ChatGPT.'
+              : 'Connectez votre propre compte OpenAI pour utiliser l’IA dans votre espace SmartLearn. Aucun rôle administrateur nécessaire.'
+          }}
+        </p>
+        @if (!connected) {
+          <small
+            >L’accès dépend de votre forfait et des autorisations accordées par OpenAI. Votre
+            connexion n’est pas partagée avec les autres visiteurs.</small
+          >
+        }
+      </div>
+      @if (connected) {
+        <button
+          class="text-button"
+          (click)="disconnectOpenAi()"
+          [disabled]="connecting || busy || explaining"
+        >
+          {{ connecting ? 'Déconnexion…' : 'Déconnecter OpenAI' }}
+        </button>
+      } @else {
+        <button
+          class="openai-button"
+          (click)="connectOpenAi()"
+          [disabled]="connecting || busy || explaining"
+        >
+          {{ connecting ? 'Ouverture d’OpenAI…' : 'Continue with ChatGPT' }}
+        </button>
+      }
+    </section>
+  }
+
+  @if (!checking) {
+    <section class="saved-library" aria-label="Paquets enregistrés">
+      <div class="library-heading">
+        <h2>Mes paquets enregistrés ({{ library.length }})</h2>
+        <button
+          class="btn btn-primary"
+          (click)="newDeck(); uploadPanel.scrollIntoView({ block: 'start' })"
+          [disabled]="busy || saving || explaining"
+        >
+          + Nouveau paquet
+        </button>
+      </div>
+      <p>
+        Ajoutez un document pour créer un autre paquet. Vos paquets existants restent enregistrés :
+        cliquez sur l’un d’eux pour le réviser.
+      </p>
+      <div class="saved-decks">
+        @for (saved of library; track saved.id) {
+          <button
+            (click)="loadSaved(saved.id)"
+            [class.selected]="deck?.id === saved.id"
+            [attr.aria-pressed]="deck?.id === saved.id"
+            [disabled]="busy || saving || explaining"
+          >
+            <strong>{{ saved.title }}</strong
+            ><span>{{ saved.filename }} · {{ saved.cardCount }} cartes</span>
+          </button>
+        }
+      </div>
+    </section>
+  }
+  <div class="work-grid" [class.has-deck]="deck">
+    <section #uploadPanel class="upload-panel" aria-labelledby="upload-title">
+      <div class="section-label">
+        <span class="step">01</span>
+        <div>
+          <h2 id="upload-title">Créer un nouveau paquet</h2>
+          <p>Un document par paquet. Vos autres paquets sont conservés.</p>
+        </div>
+      </div>
+      <form #uploadForm="ngForm" (ngSubmit)="generate()">
+        <label
+          class="drop-zone"
+          [class.selected]="file"
+          (dragover)="$event.preventDefault()"
+          (drop)="drop($event)"
+        >
+          <span class="upload-icon"><app-icon name="book" /></span>
+          <strong>{{ file ? file.name : 'Déposez votre document ici' }}</strong>
+          <span>{{
+            file ? 'Cliquez pour changer de document' : 'ou cliquez pour choisir un fichier'
+          }}</span>
+          <small>PDF, PowerPoint (.pptx), Word (.docx) · 10 Mo maximum</small>
+          <input
+            type="file"
+            accept=".pdf,.pptx,.docx,application/pdf,application/vnd.openxmlformats-officedocument.presentationml.presentation,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+            (change)="choose($event)"
+            [disabled]="busy"
+            aria-label="Choisir un document PDF, PPTX ou DOCX"
+          />
+        </label>
+        <div class="fields">
+          <label
+            >Nombre de cartes<select name="count" [(ngModel)]="count" [disabled]="busy">
+              <option [ngValue]="5">5 cartes</option>
+              <option [ngValue]="10">10 cartes</option>
+              <option [ngValue]="15">15 cartes</option>
+              <option [ngValue]="20">20 cartes</option>
+            </select></label
+          >
+          <label
+            >Langue<select name="language" [(ngModel)]="language" [disabled]="busy">
+              <option value="fr">Français</option>
+              <option value="en">English</option>
+              <option value="ar">العربية</option>
+            </select></label
+          >
+          <label class="full"
+            >Niveau<select name="difficulty" [(ngModel)]="difficulty" [disabled]="busy">
+              <option value="beginner">Débutant — les idées essentielles</option>
+              <option value="intermediate">Intermédiaire — comprendre et appliquer</option>
+              <option value="advanced">Avancé — approfondir les notions</option>
+            </select></label
+          >
+          <label
+            >Première {{ fileUnit
+            }}<input
+              name="firstPage"
+              type="number"
+              min="1"
+              required
+              [(ngModel)]="firstPage"
+              [disabled]="busy"
+          /></label>
+          <label
+            >Dernière {{ fileUnit
+            }}<input
+              name="lastPage"
+              type="number"
+              [min]="firstPage"
+              [(ngModel)]="lastPage"
+              placeholder="Fin du document"
+              [disabled]="busy"
+          /></label>
+        </div>
+        <p class="field-help">
+          {{ maxUnits }} pages, diapositives ou sections maximum par sélection, dans la limite de
+          600 000 caractères. Dans Word, les sections sont des blocs de texte d’environ 3 000
+          caractères, pas des pages. Le texte présent uniquement dans des images nécessite une
+          reconnaissance de texte préalable.
+        </p>
+        <button
+          type="submit"
+          class="btn btn-primary generate"
+          [disabled]="
+            !file || busy || checking || !configured || uploadForm.invalid || explaining || saving
+          "
+        >
+          <app-icon name="spark" />
+          {{ busy ? 'Création de vos cartes…' : 'Générer mes flashcards' }}
+        </button>
+        @if (busy) {
+          <p class="loading-text" role="status">
+            Extraction du texte et génération par l’IA en cours. Cela peut prendre jusqu’à 180
+            secondes.
+          </p>
+        }
+        <p class="privacy">
+          <app-icon name="shield" /> Le texte sélectionné est envoyé à OpenAI pour créer vos cartes.
+          Le fichier original n’est pas conservé. Les cartes, le texte extrait et votre progression
+          sont enregistrés dans votre bibliothèque privée. Conservez les cookies de ce navigateur
+          pour y accéder.
+        </p>
+      </form>
+    </section>
+
+    @if (deck && card; as current) {
+      <section
+        class="study-panel"
+        aria-labelledby="deck-title"
+        [attr.dir]="deck.language === 'ar' ? 'rtl' : 'ltr'"
+      >
+        <div class="deck-heading">
+          <div>
+            <span class="eyebrow">VOTRE PAQUET · {{ deck.cards.length }} CARTES</span>
+            <h2 id="deck-title">{{ deck.title }}</h2>
+            <p>{{ deck.filename }}</p>
+          </div>
+          <button class="text-button" (click)="export()">Exporter JSON</button>
+        </div>
+        <div class="study-progress">
+          <span>Carte {{ index + 1 }} / {{ deck.cards.length }}</span
+          ><span>{{ reviewed.size }} retenue(s)</span>
+        </div>
+        <progress
+          [value]="reviewed.size"
+          [max]="deck.cards.length"
+          aria-label="Cartes retenues"
+        ></progress>
+        @if (reviewed.size === deck.cards.length) {
+          <p class="notice" role="status">
+            Toutes les cartes sont marquées comme retenues. Vous pouvez continuer à réviser.
+          </p>
+        }
+        <article class="study-card" aria-live="polite">
+          <div class="card-top">
+            <span>{{ editing ? 'MODIFIER LA CARTE' : 'À VOUS DE JOUER' }}</span
+            ><span>{{ sourceLabel }} {{ current.page }}</span>
+          </div>
+          @if (editing) {
+            <label
+              >Question<textarea
+                [(ngModel)]="editQuestion"
+                maxlength="1000"
+                rows="3"
+                [disabled]="saving"
+              ></textarea>
+            </label>
+            <label
+              >Réponse<textarea
+                [(ngModel)]="editAnswer"
+                maxlength="3000"
+                rows="5"
+                [disabled]="saving"
+              ></textarea>
+            </label>
+            <div class="button-row">
+              <button
+                class="btn btn-primary"
+                (click)="save()"
+                [disabled]="saving || !editQuestion.trim() || !editAnswer.trim()"
+              >
+                {{ saving ? 'Enregistrement…' : 'Enregistrer' }}</button
+              ><button class="text-button" (click)="editing = false" [disabled]="saving">
+                Annuler
+              </button>
+            </div>
+          } @else {
+            <h3>{{ current.question }}</h3>
+            @if (revealed) {
+              <div class="answer">
+                <span class="eyebrow">LA RÉPONSE</span>
+                <p>{{ current.answer }}</p>
+              </div>
+            } @else {
+              <p class="recall-hint">
+                Prenez un instant pour retrouver la réponse avant de la retourner.
+              </p>
+            }
+            <button class="btn reveal" (click)="revealed = !revealed">
+              {{ revealed ? 'Masquer la réponse' : 'Révéler la réponse' }} <app-icon name="arrow" />
+            </button>
+          }
+        </article>
+        <div class="card-controls">
+          <button
+            class="text-button"
+            (click)="move(-1)"
+            [disabled]="busy || explaining || saving || editing"
+          >
+            ← Précédente</button
+          ><button
+            class="text-button"
+            (click)="startEdit()"
+            [disabled]="busy || explaining || saving || editing"
+          >
+            Modifier</button
+          ><button
+            class="text-button"
+            (click)="move(1)"
+            [disabled]="busy || explaining || saving || editing"
+          >
+            Suivante →
+          </button>
+        </div>
+        @if (revealed && !editing) {
+          <div class="button-row ratings">
+            <button class="btn" (click)="mark(false)" [disabled]="busy || explaining || saving">
+              À revoir</button
+            ><button
+              class="btn btn-primary"
+              (click)="mark(true)"
+              [disabled]="busy || explaining || saving"
+            >
+              <app-icon name="check" /> Je retiens
+            </button>
+          </div>
+          <details class="source">
+            <summary>Voir la source · {{ sourceLabel }} {{ current.page }}</summary>
+            <blockquote>{{ current.source }}</blockquote>
+          </details>
+          <button
+            class="explain-button"
+            (click)="explain()"
+            [disabled]="busy || explaining || !!explanation"
+          >
+            <app-icon name="spark" />
+            {{ explaining ? 'Préparation de l’explication…' : 'Expliquer davantage' }}
+          </button>
+          @if (explaining) {
+            <p role="status" class="muted">
+              L’IA prépare une explication à partir de votre document…
+            </p>
+          }
+          @if (explanation; as detail) {
+            <aside class="explanation" aria-live="polite">
+              <span class="eyebrow">ALLONS UN PEU PLUS LOIN</span>
+              <h3>Comprendre l’idée</h3>
+              <p>{{ detail.explanation }}</p>
+              <h3>Un exemple illustratif</h3>
+              <p>{{ detail.example }}</p>
+              <h3>À retenir</h3>
+              <p>{{ detail.takeaway }}</p>
+            </aside>
+          }
+        }
+        <app-video-lesson [deckId]="deck.id" [language]="deck.language" [configured]="configured" />
+        <div class="deck-footer">
+          <p>
+            Paquet enregistré automatiquement. Vérifiez les réponses avec le document et exportez
+            une copie pour conserver vos cartes si vous effacez les cookies du navigateur.
+          </p>
+          @if (deleteRequested) {
+            <p>Supprimer définitivement ce paquet, ses cartes, ses explications et sa vidéo ?</p>
+            <button class="text-button" (click)="clear()" [disabled]="saving">
+              Supprimer définitivement
+            </button>
+            <button class="text-button" (click)="deleteRequested = false" [disabled]="saving">
+              Annuler
+            </button>
+          } @else {
+            <button
+              class="text-button"
+              (click)="deleteRequested = true"
+              [disabled]="busy || explaining || saving"
+            >
+              Supprimer ce paquet
+            </button>
+          }
+        </div>
+      </section>
+    } @else {
+      <section class="empty-study" aria-label="Comment ça marche">
+        <div class="sample-stack">
+          <div class="sample-back"></div>
+          <div class="sample-card">
+            <span>UNE NOTION À LA FOIS</span>
+            <h2>Et si votre prochain déclic<br />tenait sur une carte ?</h2>
+            <div class="sample-line"></div>
+            <p>Une question. Une réponse.<br />Une idée qui reste.</p>
+            <app-icon name="spark" />
+          </div>
+        </div>
+        <div class="how-it-works">
+          <p><b>1</b> Choisissez votre document</p>
+          <p><b>2</b> L’IA prépare vos questions</p>
+          <p><b>3</b> Révisez et demandez une explication</p>
+        </div>
+      </section>
+    }
+  </div>
+</div>

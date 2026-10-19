@@ -1,5 +1,6 @@
 <div class="page-header">
   <div><p class="eyebrow">PILOTAGE DE LA PLATEFORME</p><h1 class="page-title">Vue d'ensemble</h1><p class="page-subtitle">Bonjour {{ auth.user()?.prenom }}, voici l'essentiel de votre espace de formation.</p></div>
+  <a routerLink="/flashcards" class="btn btn-secondary"><app-icon name="spark" /> Ouvrir les flashcards</a>
   <a routerLink="/formations" class="btn btn-primary"><app-icon name="book" /> Gérer le catalogue</a>
 </div>
 @if (loading) { <div class="loading-state" role="status">Préparation de votre tableau de bord…</div> }

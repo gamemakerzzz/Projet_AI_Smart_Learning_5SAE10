@@ -12,9 +12,11 @@ import { FeedbackComponent } from './shared/feedback.component';
   imports: [RouterOutlet, RouterLink, RouterLinkActive, IconComponent, FeedbackComponent],
   template: `
     <app-feedback />
-    @if (auth.user(); as user) {
+    @if (auth.user()) {
       <a href="#main-content" class="skip-link" (click)="focusMain($event)">Aller au contenu</a>
-      <div class="app-container">
+    }
+      <div [class.app-container]="auth.user()">
+        @if (auth.user(); as user) {
         @if (menuOpen) { <button class="nav-scrim" aria-label="Fermer le menu" (click)="menuOpen = false"></button> }
         <aside id="navigation" class="sidebar" [class.is-open]="menuOpen">
           <a [routerLink]="auth.home" class="brand"><span class="brand-icon"><app-icon name="book" /></span><span>SmartLearn<span class="brand-dot">.</span></span></a>
@@ -32,6 +34,13 @@ import { FeedbackComponent } from './shared/feedback.component';
             } @else {
               <li class="nav-item"><a [routerLink]="['/apprenants', user.id, 'profil']" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="user" /> Mon profil</a></li>
             }
+            <li class="nav-item"><a routerLink="/tutor" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="spark" /> AI Tutor & Mind Map</a></li>
+            <li class="nav-item"><a routerLink="/forum" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="users" /> Community forum</a></li>
+            <li class="nav-item"><a routerLink="/flashcards" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="book" /> Flashcards documents</a></li>
+            <li class="nav-item"><a routerLink="/chapitres-revoir" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="book" /> Chapitres à revoir</a></li>
+            <li class="nav-item"><a routerLink="/analyse-ia" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="spark" /> Analyse IA</a></li>
+            <li class="nav-item"><a routerLink="/planification-ia" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="spark" /> Planification IA</a></li>
+            <li class="nav-item"><a routerLink="/statistiques" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="grid" /> Statistiques</a></li>
             <li class="nav-item"><a routerLink="/recommandations" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="spark" /> Recommandations</a></li>
             <li class="nav-item"><a routerLink="/examens" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="calendar" /> Examens</a></li>
             <li class="nav-item"><a routerLink="/seances" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="book" /> Séances</a></li>
@@ -45,18 +54,22 @@ import { FeedbackComponent } from './shared/feedback.component';
             <button class="icon-button logout-button" aria-label="Se déconnecter" title="Se déconnecter" [disabled]="loggingOut" (click)="logout()"><app-icon name="logout" /></button>
           </div>
         </aside>
-        <div class="workspace">
+        }
+        <div [class.workspace]="auth.user()">
+          @if (auth.user()) {
           <header class="topbar">
             <div class="topbar-start"><button #menuButton class="icon-button menu-button" aria-label="Ouvrir le menu" [attr.aria-expanded]="menuOpen" aria-controls="navigation" (click)="menuOpen = !menuOpen"><app-icon name="menu" /></button>
             <span class="breadcrumb">{{ auth.isAdmin ? 'Administration' : 'Espace apprenant' }} <span>/</span> <strong>{{ pageTitle }}</strong></span></div>
             <span class="access-badge"><app-icon name="shield" /> {{ auth.isAdmin ? 'ADMIN' : 'USER' }}</span>
           </header>
           @if (ui.pending() > 0) { <div class="request-progress" role="progressbar" aria-label="Chargement en cours"></div> }
-          <main id="main-content" tabindex="-1" class="main-content"><router-outlet /></main>
+          }
+          <main id="main-content" tabindex="-1" [class.main-content]="auth.user()"><router-outlet /></main>
+          @if (auth.user()) {
           <footer class="workspace-footer"><span>SmartLearn · Votre prochain chapitre commence ici.</span><span>Apprentissage & compétences</span></footer>
+          }
         </div>
       </div>
-    } @else { <router-outlet /> }
   `
 })
 export class AppComponent {
@@ -72,7 +85,7 @@ export class AppComponent {
     });
   }
 private updateTitle(url: string): void {
-    const titles: Record<string, string> = { dashboard: "Vue d'ensemble", accueil: 'Mon espace', formations: 'Formations', categories: 'Catégories', apprenants: 'Apprenants', recommandations: 'Recommandations', login: 'Connexion', examens: 'Examens', seances: 'Séances', notifications: 'Notifications', planificateur: 'Planificateur' };
+    const titles: Record<string, string> = { dashboard: "Vue d'ensemble", accueil: 'Mon espace', formations: 'Formations', categories: 'Catégories', apprenants: 'Apprenants', recommandations: 'Recommandations', tutor: 'AI Tutor & Mind Map', forum: 'Community forum', flashcards: 'Flashcards documents', 'chapitres-revoir': 'Chapitres à revoir', statistiques: 'Statistiques', 'analyse-ia': 'Analyse IA', 'planification-ia': 'Planification IA', login: 'Connexion', examens: 'Examens', seances: 'Séances', notifications: 'Notifications', planificateur: 'Planificateur' };
     this.pageTitle = url.includes('/profil') ? 'Profil' : titles[url.split('/')[1]?.split('?')[0]] || 'Bienvenue';
     document.title = `${this.pageTitle} · SmartLearn`;
   }

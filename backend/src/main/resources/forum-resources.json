@@ -1,0 +1,12 @@
+[
+  {"id":"angular-guards","title":"Angular: Control route access with guards","description":"Authentication checks, route guards, redirects and protecting navigation. Backend authorization is also required.","url":"https://angular.dev/guide/routing/route-guards"},
+  {"id":"angular-forms","title":"Angular: Reactive forms","description":"Building forms, form controls, validation and managing form state in Angular.","url":"https://angular.dev/guide/forms/reactive-forms"},
+  {"id":"spring-authorization","title":"Spring Security: Authorize HTTP requests","description":"Backend endpoint authorization, request matchers, roles and access-control rules for Spring applications.","url":"https://docs.spring.io/spring-security/reference/servlet/authorization/authorize-http-requests.html"},
+  {"id":"java-collections","title":"Java 17: Collection, List and Set","description":"Java collection interfaces, duplicate elements, ordering, iteration and collection behavior.","url":"https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/util/Collection.html"},
+  {"id":"java-null","title":"Java 17: NullPointerException","description":"Null object references, causes of NullPointerException and exception details.","url":"https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/lang/NullPointerException.html"},
+  {"id":"mysql-transactions","title":"MySQL: START TRANSACTION, COMMIT and ROLLBACK","description":"Database transactions, committing changes, rollback and autocommit in MySQL.","url":"https://dev.mysql.com/doc/refman/8.4/en/commit.html"},
+  {"id":"css-layout","title":"MDN: CSS layout","description":"CSS layout, flexbox, grid, alignment, positioning and responsive web pages.","url":"https://developer.mozilla.org/en-US/docs/Learn_web_development/Core/CSS_layout"},
+  {"id":"python-tutorial","title":"Python: Official tutorial","description":"Python language basics, control flow, data structures, functions, modules and exceptions.","url":"https://docs.python.org/3/tutorial/"},
+  {"id":"javascript-guide","title":"MDN: JavaScript guide","description":"JavaScript fundamentals, functions, objects, collections, promises and asynchronous programming.","url":"https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide"},
+  {"id":"typescript-types","title":"TypeScript: Everyday types","description":"TypeScript annotations, unions, interfaces, object types, arrays and type inference.","url":"https://www.typescriptlang.org/docs/handbook/2/everyday-types.html"}
+]

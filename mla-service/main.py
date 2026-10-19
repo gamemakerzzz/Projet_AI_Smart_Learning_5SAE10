@@ -89,3 +89,50 @@ def recommend_formations(payload: RecommendationRequest):
 
     results.sort(key=lambda x: x.score, reverse=True)
     return results
+
+
+import os, json
+import joblib
+import numpy as np
+
+SEANCE_MODEL = None
+try:
+    SEANCE_MODEL = joblib.load(os.path.join(os.path.dirname(__file__), "seance_model.joblib"))
+except Exception as e:
+    print("Modèle séance non chargé, règles utilisées :", e)
+
+class Creneau(BaseModel):
+    heure: int
+    jourSemaine: int          # 0 = lundi
+    dureeMin: int
+    joursAvantExamen: int
+    seancesMemeJour: int = 0
+
+def regle_simple(c: Creneau) -> float:
+    """Fallback : règles de bon sens."""
+    p = 0.7
+    if c.heure >= 21 or c.heure <= 7: p -= 0.3
+    if c.dureeMin > 90: p -= 0.2
+    p -= 0.1 * c.seancesMemeJour
+    return max(0.05, min(0.95, p))
+
+@app.post("/seance/probabilite")
+def seance_probabilite(creneaux: list[Creneau]):
+    out = []
+    for c in creneaux:
+        if SEANCE_MODEL is not None:
+            x = np.array([[c.heure, c.jourSemaine, c.dureeMin,
+                           c.joursAvantExamen, c.seancesMemeJour]])
+            p, source = float(SEANCE_MODEL.predict_proba(x)[0][1]), "ML"
+        else:
+            p, source = regle_simple(c), "REGLES"
+        out.append({"heure": c.heure, "jourSemaine": c.jourSemaine,
+                    "dureeMin": c.dureeMin, "probabilite": round(p, 3), "source": source})
+    return out
+
+@app.get("/seance/model/info")
+def seance_model_info():
+    try:
+        return json.load(open(os.path.join(os.path.dirname(__file__), "metrics_seance.json")))
+    except Exception:
+        return {"status": "aucun modèle entraîné"}

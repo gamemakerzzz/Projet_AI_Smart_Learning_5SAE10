@@ -7,6 +7,9 @@ import com.smartlearn.entity.Profil;
 import com.smartlearn.exception.ResourceNotFoundException;
 import com.smartlearn.repository.ApprenantRepository;
 import com.smartlearn.repository.CompetenceRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -15,17 +18,21 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
 public class AnalyseIAService {
 
+    private static final Logger log = LoggerFactory.getLogger(AnalyseIAService.class);
+
     private final ApprenantRepository apprenantRepository;
     private final CompetenceRepository competenceRepository;
     private final RestTemplate restTemplate;
 
-    private static final String IA_SERVICE_URL = "http://localhost:8000";
+    // CORRECTION : URL configurable (Docker : MLA_SERVICE_URL=http://mla-service:8000).
+    // La valeur par défaut reste utilisable si la classe est créée à la main (tests).
+    @Value("${IA_SERVICE_URL:http://127.0.0.1:8001}")
+    private String iaServiceUrl = "http://127.0.0.1:8001";
 
     public AnalyseIAService(ApprenantRepository apprenantRepository,
                              CompetenceRepository competenceRepository) {
@@ -48,7 +55,9 @@ public class AnalyseIAService {
         try {
             return callIAService(apprenant, competences, profil);
         } catch (Exception e) {
-            // Fallback local
+            // CORRECTION : l'erreur était avalée sans trace
+            log.warn("Service IA indisponible ({}/analyze), analyse locale utilisée : {}",
+                    iaServiceUrl, e.getMessage());
             return computeFallbackAnalysis(apprenant, competences, profil);
         }
     }
@@ -77,21 +86,45 @@ public class AnalyseIAService {
         HttpEntity<Map<String, Object>> entity = new HttpEntity<>(requestBody, headers);
 
         Map<String, Object> response = restTemplate.postForObject(
-                IA_SERVICE_URL + "/analyze", entity, Map.class);
+                iaServiceUrl + "/analyze", entity, Map.class);
+
+        // CORRECTION : réponse vide ou champ absent -> plus de NullPointerException
+        if (response == null) {
+            throw new IllegalStateException("Réponse vide du service IA");
+        }
 
         AnalyseIAResponse result = new AnalyseIAResponse();
         result.setStyleApprentissage((String) response.get("styleApprentissage"));
-        result.setForces((List<String>) response.get("forces"));
-        result.setFaiblesses((List<String>) response.get("faiblesses"));
-        result.setRecommandationsPersonnalisees((List<String>) response.get("recommandationsPersonnalisees"));
-        result.setScoreProgression(((Number) response.get("scoreProgression")).intValue());
+        result.setForces(toStringList(response.get("forces")));
+        result.setFaiblesses(toStringList(response.get("faiblesses")));
+        result.setRecommandationsPersonnalisees(toStringList(response.get("recommandationsPersonnalisees")));
+        Object score = response.get("scoreProgression");
+        result.setScoreProgression(score instanceof Number ? ((Number) score).intValue() : 0);
         result.setNiveauGlobal((String) response.get("niveauGlobal"));
 
-        @SuppressWarnings("unchecked")
-        Map<String, Double> compEvol = (Map<String, Double>) response.get("competencesEvolution");
+        // CORRECTION : le cast direct en Map<String, Double> échouait si Jackson renvoyait des Integer
+        Map<String, Double> compEvol = new HashMap<>();
+        Object evol = response.get("competencesEvolution");
+        if (evol instanceof Map) {
+            for (Map.Entry<?, ?> en : ((Map<?, ?>) evol).entrySet()) {
+                if (en.getValue() instanceof Number) {
+                    compEvol.put(String.valueOf(en.getKey()), ((Number) en.getValue()).doubleValue());
+                }
+            }
+        }
         result.setCompetencesEvolution(compEvol);
 
         return result;
+    }
+
+    private static List<String> toStringList(Object value) {
+        List<String> out = new ArrayList<>();
+        if (value instanceof List) {
+            for (Object o : (List<?>) value) {
+                if (o != null) out.add(o.toString());
+            }
+        }
+        return out;
     }
 
     private AnalyseIAResponse computeFallbackAnalysis(Apprenant apprenant, List<Competence> competences, Profil profil) {
@@ -129,22 +162,27 @@ public class AnalyseIAService {
         result.setFaiblesses(faiblesses);
         result.setCompetencesEvolution(compEvol);
 
-        // Recommandations
+        double avgLevel = competences.stream().mapToInt(Competence::getNiveau).average().orElse(0.0);
+
+        // Recommandations (mêmes règles que le service Python)
         List<String> recommandations = new ArrayList<>();
         if (!faiblesses.isEmpty()) {
             recommandations.add("Consacrez des séances de révision aux compétences faibles : " +
                     String.join(", ", faiblesses));
         }
-        if (profil != null && profil.getObjectif() != null) {
+        // CORRECTION : un objectif vide ("") déclenchait une recommandation vide de sens
+        if (profil != null && profil.getObjectif() != null && !profil.getObjectif().isBlank()) {
             recommandations.add("Alignez vos formations sur votre objectif : " + profil.getObjectif());
         }
         if (competences.size() < 3) {
             recommandations.add("Développez au moins 3 compétences pour une base solide");
         }
+        if (avgLevel >= 75) {
+            recommandations.add("Maintenez votre niveau avec des défis avancés");
+        }
         result.setRecommandationsPersonnalisees(recommandations);
 
         // Score de progression
-        double avgLevel = competences.stream().mapToInt(Competence::getNiveau).average().orElse(0.0);
         result.setScoreProgression((int) avgLevel);
 
         if (avgLevel < 50) {

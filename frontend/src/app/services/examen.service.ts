@@ -11,6 +11,11 @@ export class ExamenService {
 
   constructor(private http: HttpClient) {}
 
+  /** ADMIN uniquement : tous les examens de tous les apprenants */
+  getAll(): Observable<Examen[]> {
+    return this.http.get<Examen[]>(this.apiUrl);
+  }
+
   getAllByApprenant(apprenantId: number): Observable<Examen[]> {
     return this.http.get<Examen[]>(`${this.apiUrl}/apprenant/${apprenantId}`);
   }

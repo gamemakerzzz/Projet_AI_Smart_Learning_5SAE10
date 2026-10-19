@@ -31,15 +31,20 @@ public class SecurityConfig {
                 .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/auth/csrf", "/api/auth/login", "/error").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/flashcards/openai/callback").permitAll()
+                .requestMatchers("/api/flashcards/**").authenticated()
+                .requestMatchers("/api/forum/**").authenticated()
+                .requestMatchers("/api/tutor/**").authenticated()
                 .requestMatchers("/api/auth/me", "/api/auth/logout").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/formations/**", "/api/categories/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/apprenants").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.POST, "/api/apprenants").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/apprenants/*").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/apprenants/*").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/examens").hasRole("ADMIN")
                 .requestMatchers("/api/apprenants/**", "/api/competences/**", "/api/recommendations/**",
                  "/api/examens/**", "/api/seances/**", "/api/notifications/**",
-                 "/api/planification/**", "/api/chapitres-revoir/**", "/api/statistiques/**").authenticated()
+                 "/api/planification/**", "/api/chapitres-revoir/**", "/api/statistiques/**", "/api/analyse-ia/**", "/api/planification-ia/**", "/api/seance/**").authenticated()
                 .requestMatchers("/api/**").hasRole("ADMIN")
                 .anyRequest().denyAll())
             .formLogin(form -> form.loginProcessingUrl("/api/auth/login").usernameParameter("email")

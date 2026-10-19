@@ -1,5 +1,7 @@
 # 🎓 SMARTLEARN — Plateforme Intelligente de Gestion et Recommandation de Formations
 
+**Merged Windows copy:** run `./Start-SmartLearn.ps1` from this folder, then open `http://localhost:4200/#/login`. See [MERGE-NOTES.md](MERGE-NOTES.md) for startup, accounts, isolated storage, flashcard video support and verification.
+
 SMARTLEARN est une application web Full Stack dotée d'un moteur de Recommandation basé sur l'Intelligence Artificielle (Machine Learning), développée dans le cadre d'un projet universitaire.
 
 ---

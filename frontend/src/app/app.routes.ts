@@ -17,6 +17,11 @@ import {StatistiquesComponent} from './components/statistiques/statistiques.comp
 import { authGuard, guestGuard } from './auth.guard';
 
 export const routes: Routes = [
+  { path: 'planification-ia', canActivate: [authGuard], loadComponent: () => import('./components/planification-ia/planification-ia.component').then(m => m.PlanificationIAComponent) },
+  { path: 'analyse-ia', canActivate: [authGuard], loadComponent: () => import('./components/analyse-ia/analyse-ia.component').then(m => m.AnalyseIAComponent) },
+  { path: 'tutor', canActivate: [authGuard], loadComponent: () => import('./components/tutor/tutor.component').then(m => m.TutorComponent) },
+  { path: 'forum', canActivate: [authGuard], loadComponent: () => import('./components/forum/forum.component').then(m => m.ForumComponent) },
+  { path: 'flashcards', canActivate: [authGuard], loadComponent: () => import('./components/flashcards/flashcards.component').then(m => m.FlashcardsComponent) },
   { path: 'login', component:LoginComponent,canActivate: [guestGuard] },
   { path: 'accueil', component:HomeComponent,canActivate: [authGuard], data: { userOnly: true } },
   { path: '', redirectTo: 'accueil', pathMatch: 'full' },

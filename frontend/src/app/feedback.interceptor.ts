@@ -4,8 +4,9 @@ import { finalize, tap } from 'rxjs';
 import { UiService } from './services/ui.service';
 export const feedbackInterceptor: HttpInterceptorFn = (request, next) => {
   const ui = inject(UiService);
-  if (!request.url.startsWith('/api/') || request.url.startsWith('/api/auth/')) return next(request);
-  const mutation = !['GET', 'HEAD', 'OPTIONS'].includes(request.method);
+  if (!request.url.startsWith('/api/') || request.url.startsWith('/api/auth/') || request.url.startsWith('/api/flashcards') || request.url.startsWith('/api/forum/') || request.url.startsWith('/api/tutor/')) return next(request);
+  const calculation = request.url.startsWith('/api/planification-ia/') || request.url.startsWith('/api/seance/probabilite/');
+  const mutation = !calculation && !['GET', 'HEAD', 'OPTIONS'].includes(request.method);
   ui.pending.update(n => n + 1);
   if (mutation) ui.saving.update(n => n + 1);
   return next(request).pipe(tap({
