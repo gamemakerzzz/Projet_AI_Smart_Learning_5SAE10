@@ -2,6 +2,7 @@ package com.smartlearn.service;
 
 import com.smartlearn.dto.ExamenRequest;
 import com.smartlearn.dto.ExamenResponse;
+import com.smartlearn.dto.NotificationRequest;
 import com.smartlearn.entity.Apprenant;
 import com.smartlearn.entity.Examen;
 import com.smartlearn.entity.Formation;
@@ -14,6 +15,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,17 +28,29 @@ public class ExamenService {
     private final ExamenRepository examenRepository;
     private final ApprenantRepository apprenantRepository;
     private final FormationRepository formationRepository;
+    private final NotificationService notificationService;
+    private final NotificationRappelService rappelService;
 
     public ExamenService(ExamenRepository examenRepository,
                          ApprenantRepository apprenantRepository,
-                         FormationRepository formationRepository) {
+                         FormationRepository formationRepository,
+                         NotificationService notificationService,
+                         NotificationRappelService rappelService) {
         this.examenRepository = examenRepository;
         this.apprenantRepository = apprenantRepository;
         this.formationRepository = formationRepository;
+        this.notificationService = notificationService;
+        this.rappelService = rappelService;
     }
 
     public List<ExamenResponse> getAllByApprenant(Long apprenantId) {
         return examenRepository.findByApprenantIdOrderByIdAsc(apprenantId).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<ExamenResponse> getAll() {
+        return examenRepository.findAll().stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -80,6 +94,18 @@ public class ExamenService {
 
         Examen saved = examenRepository.save(examen);
         log.debug("Examen créé: id={}, apprenantId={}", saved.getId(), apprenantId);
+
+        // Notification création examen
+        try {
+            NotificationRequest notifReq = new NotificationRequest();
+            notifReq.setMessage("Nouvel examen planifié : \"" + saved.getTitre() + "\" le " + 
+                saved.getDateExamen().toLocalDate() + " à " + saved.getDateExamen().toLocalTime());
+            notifReq.setType("EXAMEN");
+            notificationService.create(apprenantId, notifReq);
+        } catch (Exception e) {
+            log.warn("Notification création examen échouée: {}", e.getMessage());
+        }
+
         return toResponse(saved);
     }
 
@@ -87,6 +113,9 @@ public class ExamenService {
     public ExamenResponse update(Long id, ExamenRequest request) {
         Examen examen = examenRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Examen introuvable : " + id));
+
+        boolean dateChanged = !request.getDateExamen().equals(examen.getDateExamen());
+        boolean titreChanged = !request.getTitre().equals(examen.getTitre());
 
         examen.setTitre(request.getTitre());
         examen.setDescription(request.getDescription());
@@ -104,15 +133,39 @@ public class ExamenService {
 
         Examen saved = examenRepository.save(examen);
         log.debug("Examen mis à jour: id={}", saved.getId());
+
+        // Notification modification si changement important
+        if (dateChanged || titreChanged) {
+            try {
+                NotificationRequest notifReq = new NotificationRequest();
+                StringBuilder msg = new StringBuilder("Examen modifié : \"" + saved.getTitre() + "\"");
+                if (dateChanged) {
+                    msg.append(" - nouvelle date : ").append(saved.getDateExamen().toLocalDate())
+                       .append(" à ").append(saved.getDateExamen().toLocalTime());
+                }
+                notifReq.setMessage(msg.toString());
+                notifReq.setType("EXAMEN");
+                notificationService.create(saved.getApprenant().getId(), notifReq);
+            } catch (Exception e) {
+                log.warn("Notification modification examen échouée: {}", e.getMessage());
+            }
+        }
+
         return toResponse(saved);
     }
 
     @Transactional
     public void delete(Long id) {
-        if (!examenRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Examen introuvable : " + id);
-        }
-              examenRepository.deleteById(id);        log.debug("Examen supprimé: id={}", id);
+        Examen examen = examenRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Examen introuvable : " + id));
+        
+        Long apprenantId = examen.getApprenant().getId();
+        
+        // Nettoyer les rappels associés avant suppression
+        rappelService.supprimerRappelsParCible("EXAMEN", id);
+        
+        examenRepository.delete(examen);
+        log.debug("Examen supprimé: id={}", id);
     }
 
     private ExamenResponse toResponse(Examen examen) {
@@ -123,6 +176,7 @@ public class ExamenService {
         response.setDateExamen(examen.getDateExamen());
         response.setDureeMinutes(examen.getDureeMinutes());
         response.setCoefficient(examen.getCoefficient());
+        response.setApprenantId(examen.getApprenant().getId());
         if (examen.getFormation() != null) {
             response.setFormationId(examen.getFormation().getId());
         }

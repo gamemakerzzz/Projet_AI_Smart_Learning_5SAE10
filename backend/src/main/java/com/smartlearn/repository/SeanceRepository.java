@@ -12,6 +12,10 @@ public interface SeanceRepository extends JpaRepository<Seance, Long> {
     List<Seance> findByApprenantIdOrderByIdAsc(Long apprenantId);
     List<Seance> findByApprenantIdAndFormationId(Long apprenantId, Long formationId);
     List<Seance> findByApprenantIdAndDateHeureDebutBetween(Long apprenantId, java.time.LocalDateTime debut, java.time.LocalDateTime fin);
+    
+    // Pour le scheduler : toutes les séances dans une période
+    List<Seance> findByDateHeureDebutBetween(java.time.LocalDateTime debut, java.time.LocalDateTime fin);
+    
     long countByApprenantId(Long apprenantId);
     long countByApprenantIdAndFormationId(Long apprenantId, Long formationId);
     long countByApprenantIdAndFormationIsNull(Long apprenantId);

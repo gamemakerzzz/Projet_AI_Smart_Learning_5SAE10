@@ -2,6 +2,7 @@ package com.smartlearn.service;
 
 import com.smartlearn.dto.PlanificationRequest;
 import com.smartlearn.dto.PlanificationResponse;
+import com.smartlearn.dto.NotificationRequest;
 import com.smartlearn.entity.Apprenant;
 import com.smartlearn.entity.Examen;
 import com.smartlearn.entity.Formation;
@@ -33,15 +34,18 @@ public class PlanificationService {
     private final ApprenantRepository apprenantRepository;
     private final ExamenRepository examenRepository;
     private final FormationRepository formationRepository;
+    private final NotificationService notificationService;
 
     public PlanificationService(SeanceRepository seanceRepository,
                                 ApprenantRepository apprenantRepository,
                                 ExamenRepository examenRepository,
-                                FormationRepository formationRepository) {
+                                FormationRepository formationRepository,
+                                NotificationService notificationService) {
         this.seanceRepository = seanceRepository;
         this.apprenantRepository = apprenantRepository;
         this.examenRepository = examenRepository;
         this.formationRepository = formationRepository;
+        this.notificationService = notificationService;
     }
 
     // Pas de readOnly : cette méthode enregistre des séances.
@@ -104,6 +108,18 @@ public class PlanificationService {
         }
 
         log.debug("Planification générée: {} séances pour apprenantId={}", result.size(), request.getApprenantId());
+
+        // Notification de planification
+        try {
+            NotificationRequest notifReq = new NotificationRequest();
+            notifReq.setMessage("Plan de révision généré : " + result.size() + " séance(s) planifiée(s) du " +
+                request.getDateDebut() + " au " + request.getDateFin() + ".");
+            notifReq.setType("PLANIFICATION");
+            notificationService.create(request.getApprenantId(), notifReq);
+        } catch (Exception e) {
+            log.warn("Notification planification échouée: {}", e.getMessage());
+        }
+
         return result;
     }
 

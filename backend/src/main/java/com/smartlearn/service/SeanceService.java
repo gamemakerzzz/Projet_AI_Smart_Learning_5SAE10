@@ -2,6 +2,7 @@ package com.smartlearn.service;
 
 import com.smartlearn.dto.SeanceRequest;
 import com.smartlearn.dto.SeanceResponse;
+import com.smartlearn.dto.NotificationRequest;
 import com.smartlearn.entity.Apprenant;
 import com.smartlearn.entity.Formation;
 import com.smartlearn.entity.Seance;
@@ -28,13 +29,19 @@ public class SeanceService {
     private final SeanceRepository seanceRepository;
     private final ApprenantRepository apprenantRepository;
     private final FormationRepository formationRepository;
+    private final NotificationService notificationService;
+    private final NotificationRappelService rappelService;
 
     public SeanceService(SeanceRepository seanceRepository,
                          ApprenantRepository apprenantRepository,
-                         FormationRepository formationRepository) {
+                         FormationRepository formationRepository,
+                         NotificationService notificationService,
+                         NotificationRappelService rappelService) {
         this.seanceRepository = seanceRepository;
         this.apprenantRepository = apprenantRepository;
         this.formationRepository = formationRepository;
+        this.notificationService = notificationService;
+        this.rappelService = rappelService;
     }
 
     @Transactional(readOnly = true)
@@ -88,11 +95,26 @@ public class SeanceService {
 
         Seance saved = seanceRepository.save(seance);
         log.debug("Séance créée: id={}, apprenantId={}", saved.getId(), apprenantId);
+
+        // Notification création séance
+        try {
+            NotificationRequest notifReq = new NotificationRequest();
+            notifReq.setMessage("Nouvelle séance de révision planifiée : \"" + saved.getTitre() + "\" le " +
+                saved.getDateHeureDebut().toLocalDate() + " à " + saved.getDateHeureDebut().toLocalTime());
+            notifReq.setType("SEANCE");
+            notificationService.create(apprenantId, notifReq);
+        } catch (Exception e) {
+            log.warn("Notification création séance échouée: {}", e.getMessage());
+        }
+
         return toResponse(saved);
     }
 
     public SeanceResponse update(Long id, SeanceRequest request) {
         Seance seance = getSeance(id);
+
+        boolean dateChanged = !request.getDateHeureDebut().equals(seance.getDateHeureDebut());
+        boolean titreChanged = !request.getTitre().equals(seance.getTitre());
 
         validateSeance(request);
 
@@ -110,8 +132,31 @@ public class SeanceService {
             seance.setFormation(null);
         }
 
+        // Nettoyer les anciens rappels si la date a changé
+        if (dateChanged) {
+            rappelService.supprimerRappelsParCible("SEANCE", id);
+        }
+
         Seance saved = seanceRepository.save(seance);
         log.debug("Séance mise à jour: id={}", saved.getId());
+
+        // Notification modification si changement important
+        if (dateChanged || titreChanged) {
+            try {
+                NotificationRequest notifReq = new NotificationRequest();
+                StringBuilder msg = new StringBuilder("Séance modifiée : \"" + saved.getTitre() + "\"");
+                if (dateChanged) {
+                    msg.append(" - nouveau horaire : ").append(saved.getDateHeureDebut().toLocalDate())
+                       .append(" à ").append(saved.getDateHeureDebut().toLocalTime());
+                }
+                notifReq.setMessage(msg.toString());
+                notifReq.setType("SEANCE");
+                notificationService.create(saved.getApprenant().getId(), notifReq);
+            } catch (Exception e) {
+                log.warn("Notification modification séance échouée: {}", e.getMessage());
+            }
+        }
+
         return toResponse(saved);
     }
 

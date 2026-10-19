@@ -25,7 +25,7 @@ public class NotificationService {
     private final ApprenantRepository apprenantRepository;
 
     public NotificationService(NotificationRepository notificationRepository,
-                              ApprenantRepository apprenantRepository) {
+                               ApprenantRepository apprenantRepository) {
         this.notificationRepository = notificationRepository;
         this.apprenantRepository = apprenantRepository;
     }
@@ -38,6 +38,13 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
+    public List<NotificationResponse> getAllByApprenantAndStatut(Long apprenantId, String statut) {
+        return notificationRepository.findByApprenantIdAndStatut(apprenantId, statut).stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
     public List<NotificationResponse> getAllByApprenantAndType(Long apprenantId, String type) {
         return notificationRepository.findByApprenantIdAndType(apprenantId, type).stream()
                 .map(this::toResponse)
@@ -45,10 +52,8 @@ public class NotificationService {
     }
 
     @Transactional(readOnly = true)
-    public List<NotificationResponse> getAllByApprenantAndStatut(Long apprenantId, String statut) {
-        return notificationRepository.findByApprenantIdAndStatut(apprenantId, statut).stream()
-                .map(this::toResponse)
-                .collect(Collectors.toList());
+    public long countUnreadByApprenant(Long apprenantId) {
+        return notificationRepository.countByApprenantIdAndStatut(apprenantId, "NON_LU");
     }
 
     @Transactional(readOnly = true)
@@ -84,10 +89,33 @@ public class NotificationService {
         return toResponse(saved);
     }
 
+    public NotificationResponse markAsRead(Long id) {
+        Notification notification = getNotification(id);
+        notification.setStatut("LU");
+        Notification saved = notificationRepository.save(notification);
+        log.debug("Notification marquée comme lue: id={}", saved.getId());
+        return toResponse(saved);
+    }
+
+    public void markAllAsRead(Long apprenantId) {
+        List<Notification> notifications = notificationRepository.findByApprenantIdAndStatut(apprenantId, "NON_LU");
+        for (Notification n : notifications) {
+            n.setStatut("LU");
+        }
+        notificationRepository.saveAll(notifications);
+        log.debug("{} notifications marquées comme lues pour apprenantId={}", notifications.size(), apprenantId);
+    }
+
     public void delete(Long id) {
         Notification notification = getNotification(id);
         notificationRepository.delete(notification);
         log.debug("Notification supprimée: id={}", id);
+    }
+
+    public void deleteAllByApprenant(Long apprenantId) {
+        List<Notification> notifications = notificationRepository.findByApprenantId(apprenantId);
+        notificationRepository.deleteAll(notifications);
+        log.debug("Toutes les notifications supprimées pour apprenantId={}", apprenantId);
     }
 
     private Notification getNotification(Long id) {

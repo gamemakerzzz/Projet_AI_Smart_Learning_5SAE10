@@ -19,9 +19,15 @@ public class AdminInitializer implements CommandLineRunner {
     }
     @Override
     public void run(String... args) {
+        if (users.existsByEmailIgnoreCase(email)) {
+            var existing = users.findByEmailIgnoreCase(email).orElseThrow();
+            if (existing.getRole() == Role.ADMIN && !password.isBlank()) {
+                existing.setPassword(encoder.encode(password));
+                users.save(existing);
+            }
+            return;
+        }
         if (users.findAll().stream().anyMatch(a -> a.getRole() == Role.ADMIN)) return;
-        if (users.existsByEmailIgnoreCase(email))
-            throw new IllegalStateException("Admin email is already used by a learner; configure SMARTLEARN_ADMIN_EMAIL");
         boolean generated = password.isBlank();
         String initialPassword = generated ? java.util.UUID.randomUUID().toString() : password;
         Apprenant admin = new Apprenant();

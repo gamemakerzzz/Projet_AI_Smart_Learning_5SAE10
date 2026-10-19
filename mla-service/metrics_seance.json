@@ -1,0 +1,25 @@
+{
+  "baseline_logreg": {
+    "accuracy": 0.652,
+    "F1": 0.666,
+    "AUC": 0.702
+  },
+  "random_forest": {
+    "accuracy": 0.642,
+    "F1": 0.652,
+    "AUC": 0.691
+  },
+  "best_params": {
+    "max_depth": 8,
+    "min_samples_leaf": 10,
+    "n_estimators": 100
+  },
+  "feature_importance": {
+    "heure": 0.171,
+    "jour_semaine": 0.087,
+    "duree_min": 0.313,
+    "jours_avant_examen": 0.147,
+    "seances_meme_jour": 0.283
+  },
+  "data": "synthetique (5000 lignes)"
+}

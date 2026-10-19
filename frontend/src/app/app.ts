@@ -33,6 +33,10 @@ import { FeedbackComponent } from './shared/feedback.component';
               <li class="nav-item"><a [routerLink]="['/apprenants', user.id, 'profil']" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="user" /> Mon profil</a></li>
             }
             <li class="nav-item"><a routerLink="/recommandations" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="spark" /> Recommandations</a></li>
+            <li class="nav-item"><a routerLink="/statistiques" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="chart" /> Statistiques</a></li>
+            <li class="nav-item"><a routerLink="/analyse-ia" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="spark" /> Analyse IA</a></li>
+            <li class="nav-item"><a routerLink="/planification-ia" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="calendar" /> Planification IA</a></li>
+            <li class="nav-item"><a routerLink="/chapitres-revoir" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="book" /> Chapitres à revoir</a></li>
             <li class="nav-item"><a routerLink="/examens" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="calendar" /> Examens</a></li>
             <li class="nav-item"><a routerLink="/seances" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="book" /> Séances</a></li>
             <li class="nav-item"><a routerLink="/notifications" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="bell" /> Notifications</a></li>
@@ -72,7 +76,7 @@ export class AppComponent {
     });
   }
 private updateTitle(url: string): void {
-    const titles: Record<string, string> = { dashboard: "Vue d'ensemble", accueil: 'Mon espace', formations: 'Formations', categories: 'Catégories', apprenants: 'Apprenants', recommandations: 'Recommandations', login: 'Connexion', examens: 'Examens', seances: 'Séances', notifications: 'Notifications', planificateur: 'Planificateur' };
+    const titles: Record<string, string> = { dashboard: "Vue d'ensemble", accueil: 'Mon espace', formations: 'Formations', categories: 'Catégories', apprenants: 'Apprenants', recommandations: 'Recommandations', statistiques: 'Statistiques', 'chapitres-revoir': 'Chapitres à revoir', 'analyse-ia': 'Analyse IA', 'planification-ia': 'Planification IA', login: 'Connexion', examens: 'Examens', seances: 'Séances', notifications: 'Notifications', planificateur: 'Planificateur' };
     this.pageTitle = url.includes('/profil') ? 'Profil' : titles[url.split('/')[1]?.split('?')[0]] || 'Bienvenue';
     document.title = `${this.pageTitle} · SmartLearn`;
   }

@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { AuthService } from '../../services/auth.service';
 import { ChapitreRevoirService } from '../../services/chapitre-revoir.service';
 import { ChapitreRevoirResponse } from '../../models/planner.model';
@@ -6,7 +7,7 @@ import { ChapitreRevoirResponse } from '../../models/planner.model';
 @Component({
   selector: 'app-chapitres-revoir',
   standalone: true,
-  imports: [],
+  imports: [CommonModule],
   template: `
     <div class="chapitres-container">
       <div class="page-header">
@@ -17,15 +18,18 @@ import { ChapitreRevoirResponse } from '../../models/planner.model';
       </div>
 
       <div class="card">
-        <div *ngIf="chapitres.length === 0 && !loading" class="empty-state">
+        <div *ngIf="loading" class="empty-state">Analyse en cours...</div>
+        <div *ngIf="!loading && chapitres.length === 0" class="empty-state">
           Aucun chapitre à revoir détecté. Continuez vos efforts !
         </div>
-        <div *ngIf="loading" class="empty-state">Analyse en cours...</div>
         <div *ngIf="chapitres.length > 0" class="chapitres-list">
-          <div *ngFor="let c of chapitres" class="chapitre-card" [class.high-priority]="c.priorite && c.priorite >= 3">
+          <div *ngFor="let c of chapitres" class="chapitre-card" [class.high-priority]="(c.priorite ?? 0) >= 3">
             <div class="chapitre-priorite">
-              <span class="priority-badge" [class.high]="c.priorite && c.priorite >= 3" [class.medium]="c.priorite && c.priorite === 1" [class.low]="c.priorite && c.priorite === 0">
-                {{ c.priorite || 0 }}
+              <span class="priority-badge"
+                    [class.high]="(c.priorite ?? 0) >= 3"
+                    [class.medium]="(c.priorite ?? 0) === 2"
+                    [class.low]="(c.priorite ?? 0) === 1">
+                {{ c.priorite ?? 0 }}
               </span>
             </div>
             <div class="chapitre-info">

@@ -5,6 +5,7 @@ export interface Examen {
   dateExamen: string;
   dureeMinutes: number;
   formationId?: number;
+  apprenantId?: number;   // AJOUT : propriétaire de l'examen
   coefficient: number;
 }
 
@@ -71,4 +72,58 @@ export interface FormationProgress {
   titre: string;
   totalChapitres: number;
   chapitresFaibles: number;
+}
+
+export interface AnalyseIAResponse {
+  styleApprentissage: string;
+  forces: string[];
+  faiblesses: string[];
+  recommandationsPersonnalisees: string[];
+  scoreProgression: number;
+  competencesEvolution: { [key: string]: number };
+  niveauGlobal: string;
+}
+
+export interface SeanceIAResponse {
+  date: string;
+  heureDebut: string;
+  heureFin: string;
+  titre: string;
+  description: string;
+  formationId?: number;
+  formationTitre?: string;
+  priorite?: number;
+  motif?: string;
+}
+
+export interface PlanificationIAResponse {
+  apprenantId: number;
+  dateDebut: string;
+  dateFin: string;
+  totalSeances: number;
+  periode: string;
+  seances: SeanceIAResponse[];
+}
+
+export interface CreneauProbabiliteRequest {
+  heure: number;
+  jourSemaine: number;
+  dureeMin: number;
+  joursAvantExamen: number;
+  seancesMemeJour?: number;
+}
+
+export interface CreneauProbabiliteResponse {
+  heure: number;
+  jourSemaine: number;
+  dureeMin: number;
+  probabilite: number;
+  source: string;
+}
+
+export interface SeanceAvecProbabilite extends SeanceIAResponse {
+  probabilite?: number;
+  source?: string;
+  heure?: number;
+  dureeMin?: number;
 }

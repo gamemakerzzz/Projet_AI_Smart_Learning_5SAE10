@@ -14,6 +14,8 @@ import {NotificationsComponent} from './components/notifications/notifications.c
 import {PlanificateurComponent} from './components/planificateur/planificateur.component';
 import {ChapitresRevoirComponent} from './components/chapitres-revoir/chapitres-revoir.component';
 import {StatistiquesComponent} from './components/statistiques/statistiques.component';
+import {AnalyseIAComponent} from './components/analyse-ia/analyse-ia.component';
+import {PlanificationIAComponent} from './components/planification-ia/planification-ia.component';
 import { authGuard, guestGuard } from './auth.guard';
 
 export const routes: Routes = [
@@ -31,7 +33,9 @@ export const routes: Routes = [
   { path: 'seances', component:SeancesComponent,canActivate: [authGuard] },
   { path: 'notifications', component:NotificationsComponent,canActivate: [authGuard] },
   { path: 'planificateur', component:PlanificateurComponent,canActivate: [authGuard] },
+  { path: 'planification-ia', component:PlanificationIAComponent,canActivate: [authGuard] },
   { path: 'chapitres-revoir', component:ChapitresRevoirComponent,canActivate: [authGuard] },
   { path: 'statistiques', component:StatistiquesComponent,canActivate: [authGuard] },
+  { path: 'analyse-ia', component:AnalyseIAComponent,canActivate: [authGuard] },
   { path: '**', redirectTo: 'accueil' }
 ];

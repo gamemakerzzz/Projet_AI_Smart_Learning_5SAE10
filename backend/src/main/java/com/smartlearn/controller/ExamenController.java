@@ -31,6 +31,13 @@ public class ExamenController {
         this.examenService = examenService;
     }
 
+    // Récupérer tous les examens (ADMIN)
+    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping
+    public List<ExamenResponse> getAll() {
+        return examenService.getAll();
+    }
+
     // Récupérer tous les examens d'un apprenant
     @PreAuthorize("hasRole('ADMIN') or @ownership.learner(authentication, #apprenantId)")
     @GetMapping("/apprenant/{apprenantId}")
@@ -61,7 +68,7 @@ public class ExamenController {
     }
 
     // Créer un examen
-    @PreAuthorize("hasRole('ADMIN') or @ownership.learner(authentication, #apprenantId)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping("/apprenant/{apprenantId}")
     @ResponseStatus(HttpStatus.CREATED)
     public ExamenResponse create(
@@ -72,7 +79,7 @@ public class ExamenController {
     }
 
     // Modifier un examen
-    @PreAuthorize("hasRole('ADMIN') or @ownership.examen(authentication, #id)")
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ExamenResponse update(
             @PathVariable("id") Long id,
@@ -82,7 +89,7 @@ public class ExamenController {
     }
 
     // Supprimer un examen
-    @PreAuthorize("hasRole('ADMIN') or @ownership.examen(authentication, #id)")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void delete(@PathVariable("id") Long id) {
