@@ -11,9 +11,12 @@ import { ApprenantProfilComponent } from './components/apprenant-profil/apprenan
 import { RecommandationsComponent } from './components/recommandations/recommandations.component';
 
 export const routes: Routes = [
+  { path: 'tutor', canActivate: [authGuard], loadComponent: () => import('./components/tutor/tutor.component').then(m => m.TutorComponent) },
+  { path: 'forum', canActivate: [authGuard], loadComponent: () => import('./components/forum/forum.component').then(m => m.ForumComponent) },
+  { path: 'flashcards', canActivate: [authGuard], loadComponent: () => import('./components/flashcards/flashcards.component').then(m => m.FlashcardsComponent) },
   { path: 'login', component: LoginComponent, canActivate: [guestGuard] },
   { path: 'accueil', component: HomeComponent, canActivate: [authGuard], data: { userOnly: true } },
-  { path: '', redirectTo: 'accueil', pathMatch: 'full' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard], data: { admin: true } },
   { path: 'categories', component: CategoriesComponent, canActivate: [authGuard], data: { admin: true } },
   { path: 'formations', component: FormationsComponent, canActivate: [authGuard] },

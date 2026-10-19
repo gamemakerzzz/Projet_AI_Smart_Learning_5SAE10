@@ -26,6 +26,8 @@ import { FeedbackComponent } from './shared/feedback.component';
               <li class="nav-item"><a routerLink="/accueil" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="grid" /> Mon espace</a></li>
             }
             <li class="nav-item"><a routerLink="/formations" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="book" /> Formations</a></li>
+            <li class="nav-item"><a routerLink="/forum" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="users" /> Community forum</a></li>
+            <li class="nav-item"><a routerLink="/flashcards" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="spark" /> Flashcards documents</a></li>
             @if (auth.isAdmin) {
               <li class="nav-item"><a routerLink="/categories" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="tag" /> Catégories</a></li>
               <li class="nav-item"><a routerLink="/apprenants" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="users" /> Apprenants</a></li>
@@ -33,6 +35,7 @@ import { FeedbackComponent } from './shared/feedback.component';
               <li class="nav-item"><a [routerLink]="['/apprenants', user.id, 'profil']" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="user" /> Mon profil</a></li>
             }
             <li class="nav-item"><a routerLink="/recommandations" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="spark" /> Recommandations</a></li>
+            <li class="nav-item"><a routerLink="/tutor" routerLinkActive="active" ariaCurrentWhenActive="page"><app-icon name="spark" /> AI Tutor &amp; Mind Map</a></li>
           </ul></nav>
           <div class="sidebar-note"><app-icon name="spark" /><strong>Apprendre, à votre rythme.</strong><p>Les bonnes compétences ouvrent de nouvelles perspectives.</p></div>
           <div class="account-block">
@@ -69,6 +72,9 @@ export class AppComponent {
   }
   private updateTitle(url: string): void {
     const titles: Record<string, string> = { dashboard: "Vue d'ensemble", accueil: 'Mon espace', formations: 'Formations', categories: 'Catégories', apprenants: 'Apprenants', recommandations: 'Recommandations', login: 'Connexion' };
+    titles['flashcards'] = 'Flashcards documents';
+    titles['forum'] = 'Community forum';
+    titles['tutor'] = 'AI Tutor & Mind Map';
     this.pageTitle = url.includes('/profil') ? 'Profil' : titles[url.split('/')[1]?.split('?')[0]] || 'Bienvenue';
     document.title = `${this.pageTitle} · SmartLearn`;
   }
